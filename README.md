@@ -1,34 +1,21 @@
-# My Kitchen
+# Smart Treats — AI recipe server
 
-Your recipes. Your body. Your goals. A personal recipe adaptation assistant, built as a Progressive Web App.
+A tiny Cloudflare Worker that keeps your OpenAI key secret and turns your pantry into recipe ideas.
+The app (index.html) never sees the key.
 
-## Files
+## Set up (about 10 minutes, free Cloudflare account)
 
-| File | What it does |
-|---|---|
-| `index.html` | Page shell and navigation |
-| `styles.css` | Bakery visual design (light and dark mode) |
-| `core.js` | Data model, storage, migration, helpers |
-| `service.js` | Adaptation service: nutrition engine, built-in rules, Claude engine |
-| `screens.js` | All screens |
-| `actions.js` | Buttons, inputs, the Make It Mine flow, startup |
-| `sw.js` | Offline support |
-| `manifest.webmanifest` + icons | Install to home screen |
+1. Install Node.js, then in this `server` folder run: `npx wrangler login`
+2. Edit `wrangler.toml` → set `ALLOWED_ORIGIN` to your app's address (e.g. `https://yourname.github.io`).
+3. Add your key as a secret: `npx wrangler secret put OPENAI_API_KEY` (paste the key when asked).
+4. Optional: choose the model with `OPENAI_MODEL` (any current OpenAI model that supports Structured Outputs).
+5. Deploy: `npx wrangler deploy` — it prints an address like `https://smart-treats-ai.yourname.workers.dev`.
+6. In Smart Treats → Profile → **Smart Recipe AI**, paste
+   `https://smart-treats-ai.yourname.workers.dev/api/recipes/generate`
 
-Scripts must load in the order shown in `index.html`.
+## Endpoints
+- `POST /api/recipes/generate` — body: `{ pantry, restrictions, avoidIngredients, preferences, dislikes, recipeType, goal, maxMissingIngredients, numberOfRecipes }`
+- `POST /api/recipes/substitute` — body: `{ ingredient, recipe, pantry, restrictions, avoidIngredients }`
 
-## Publish on GitHub Pages
-
-1. Upload every file to the root of the repository (keep the names exactly).
-2. Settings → Pages → Deploy from branch → `main` / root.
-3. Open the Pages link on your phone and choose Add to Home Screen.
-
-## Updating
-
-After uploading changed files, edit `VERSION` in `sw.js` (for example `v2.0.1`) so installed copies pick up the new version.
-
-## Notes
-
-- Data is stored in the browser (`localStorage`), per device. Use Profile → Export my cookbook for backups.
-- On GitHub Pages, adaptations use the built-in rules (labelled "not AI"). Claude-powered reading of photos and AI adaptation only works when the app runs inside Claude.
-- Nutrition is estimated from typical ingredient values unless you enter label values.
+Only these food fields are forwarded to OpenAI. Requests from other websites are refused (ALLOWED_ORIGIN).
+Note: the address is public, so set a monthly spending limit in your OpenAI account.

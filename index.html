@@ -458,6 +458,15 @@ select.inp{appearance:none;-webkit-appearance:none;background-image:linear-gradi
 .match-inline{font:900 13px var(--font);text-transform:uppercase;letter-spacing:.03em;padding:8px 12px;border-radius:999px}
 .match-inline.hi{background:#2F8F46;color:#fff}.match-inline.mid{background:var(--butter);color:#3E2A00}
 .loc-soon{background:var(--peach-soft);color:var(--peach-ink)}
+/* ---------- smart recipe ai ---------- */
+.xofy{margin-top:6px;font:800 15px var(--font);color:#256B36}
+.xofy b{color:var(--avoid-ink)}
+.miss-acts{display:flex;flex-direction:column;gap:6px;align-items:flex-end}
+.fb{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px}
+.fb button{min-height:64px;border-radius:18px;border:2.5px solid var(--line);background:var(--card);font:800 14.5px var(--font);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px}
+.fb button span{font-size:20px;color:var(--rasp)}
+.fb button.on{border-color:var(--rasp);background:var(--rasp-soft)}
+.seg.wrap5{grid-auto-flow:row;grid-template-columns:repeat(3,1fr)}
 /* ---------- results ---------- */
 .ready-badge{display:inline-flex;align-items:center;gap:8px;background:var(--rasp-soft);color:var(--rasp-ink);font:900 15px var(--font);padding:8px 14px;border-radius:999px}
 .ready-badge svg{width:18px;height:18px;stroke-width:3}
@@ -919,7 +928,8 @@ let DB=null, draft=null;
 function defaults(){
   return {version:1,
     userLearning:null,discoverySaved:[],pantry:{items:[],goodToHave:[]},freezer:{items:[]},shoppingList:{items:[]},
-    preferences:{requirements:[],bodyReqs:[],goals:[],customReqs:[],engine:'auto',learning:true,thresholds:{protein:10,fat:5,fiber:3},nutritionStatus:'estimated',view:'list'},
+    recipeFeedback:[],aiCache:{},
+    preferences:{requirements:[],bodyReqs:[],goals:[],customReqs:[],engine:'auto',learning:true,aiEndpoint:'',aiDemo:true,thresholds:{protein:10,fat:5,fiber:3},nutritionStatus:'estimated',view:'list'},
     categories:{custom:[]},ingredients:[],recipes:[]};
 }
 function normalize(d){
@@ -931,6 +941,7 @@ function normalize(d){
     (P.requirements||[]).forEach(q=>{if(BODY_REQS.includes(q)||(P.customReqs||[]).includes(q)){if(!P.bodyReqs.includes(q))P.bodyReqs.push(q)}else if(GOALS.includes(q)&&!P.goals.includes(q))P.goals.push(q)});
   }
   if(d.preferences.learning==null)d.preferences.learning=true;
+  if(!Array.isArray(d.recipeFeedback))d.recipeFeedback=[];if(!d.aiCache||typeof d.aiCache!=='object')d.aiCache={};if(d.preferences.aiEndpoint==null)d.preferences.aiEndpoint='';if(d.preferences.aiDemo==null)d.preferences.aiDemo=true;
   // pantry v4: {items, goodToHave}; earlier empty placeholder {ingredients:[]} is carried over safely
   const P0=d.pantry||{}; d.pantry={items:Array.isArray(P0.items)?P0.items:Array.isArray(P0.ingredients)?P0.ingredients:[],goodToHave:Array.isArray(P0.goodToHave)?P0.goodToHave:[],history:Array.isArray(P0.history)?P0.history:[],customCategories:Array.isArray(P0.customCategories)?P0.customCategories:[],starterAdded:!!P0.starterAdded,starter2Added:!!P0.starter2Added};
   // v5: products — earlier entries are converted, nothing is invented
@@ -1460,7 +1471,7 @@ function checkRecipeAgainstPantry(r,factor=1,overrides={}){
     const m=matchRecipeIngredientToPantry(i,{reqs:r.userRequirements||[]});
     if(m){
       row.match=m;row.pantryId=m.product.id;
-      if(m.level==='exact'||m.level==='compatible'){
+      if(m.level==='exact'||m.level==='compatible'||m.level==='unknown'){
         row.status='have';const pq=productQty(m.product);row.have=pq;
         if(pq&&row.need){const conv=convertQty(pq,row.need.dim,c.key);if(conv){const rem=row.need.value-conv.value;if(rem>row.need.value*0.02){row.status='partial';row.remaining={...row.need,value:rem}}}}
       }else row.status=m.level==='possible'?'possible':m.level==='unknown'?'unknown':'need';
@@ -2372,7 +2383,7 @@ function matchRecipeToPantry(ings,reqs=[]){
     if(i.optional||/\b(garnish|to serve|for serving|optional|decorat)/i.test(i.name)){optional.push(i);continue}
     if(ALWAYS_HAVE.has(c.key)){have.push({...i,via:'tap'});continue}
     const m=matchRecipeIngredientToPantry(i,{reqs});
-    if(m&&(m.level==='exact'||m.level==='compatible'))have.push({...i,via:m.product.productName,product:m.product,level:m.level,note:m.note});
+    if(m&&(m.level==='exact'||m.level==='compatible'||m.level==='unknown'))have.push({...i,via:m.product.productName,product:m.product,level:m.level==='unknown'?'compatible':m.level,note:m.note,checkLabel:m.level==='unknown'});
     else if(activeProducts().some(p=>p.staple&&productKeys(p).includes(c.key)))have.push({...i,via:'staple'});
     else{const sub=findDiscoverySub(i.name,reqs);if(sub)have.push({...i,via:sub.product.productName,product:sub.product,level:'substitute',note:sub.label,sub:sub.label});else missing.push({...i,possible:m&&m.level==='possible'?m.product.productName:null})}
   }
@@ -2384,7 +2395,7 @@ const getMissingIngredients=(ings,reqs)=>matchRecipeToPantry(ings,reqs).missing;
 /** filterForRequirements — local check; never claims a requirement is met without checking every ingredient */
 function filterForRequirements(ings,reqs,avoid){
   const checks=checkRequirements(ings,reqs,avoid||[]);
-  return {met:checks.filter(c=>c.status==='met').map(c=>c.requirement),notMet:checks.filter(c=>c.status==='not_met').map(c=>c.requirement),unsure:checks.filter(c=>c.status==='cannot_confirm').map(c=>c.requirement)};
+  return {met:checks.filter(c=>c.status==='met'&&c.requirement!=='My Avoid list').map(c=>c.requirement),notMet:checks.filter(c=>c.status==='not_met').map(c=>c.requirement),unsure:checks.filter(c=>c.status==='cannot_confirm').map(c=>c.requirement)};
 }
 /* tags describe a recipe only from what is known about it */
 function recipeTags(x){
@@ -2442,7 +2453,8 @@ const ClaudeRecipeIdeaProvider={id:'claude',name:'Recipe ideas by Claude',
     const s=await getSample(); if(!s)throw {code:'unavailable'};
     const prompt=`Create 6 original, tested-style recipe ideas a home cook could make mostly from their pantry. Each must physically work: enough liquid, binder and leavening, realistic temperatures and times, complete method. These are your own ideas, not copied from websites.
 Pantry (what they have): ${params.pantryDetail.join('; ')}
-In the mood for: ${params.moodLabels.join(', ')||'anything'}
+In the mood for: ${[...params.moodLabels,...(params.recipeTypeLabels||[])].join(', ')||'anything'}${params.createGoals&&params.createGoals.length?`
+Goals: ${params.createGoals.join(', ')}`:''}
 Especially use: ${params.priorityIngredients.join(', ')||'no preference'}
 MUST HAVE (every ingredient must comply): ${params.required.join(', ')||'none'}
 Never use: ${params.avoid.join(', ')||'nothing listed'}
@@ -2486,9 +2498,18 @@ const RecipeRankingService={
       if(params.mood.includes('fiber')&&nut&&nut.fiber>=DB.preferences.thresholds.fiber)goalHits.push('Higher fiber');
       if(params.mood.includes('lowcal')&&nut&&nut.kcal<=200)goalHits.push('Lower calorie');
       const soonUsed=m.have.filter(i=>i.product&&soonIds.has(i.product.id));
+      if((params.goalKeys||[]).includes('soon')&&soonUsed.length)goalHits.push('Uses things soon');
       const prio=params.priorityIngredients.filter(p=>m.have.concat(m.missing).some(i=>canonicalIngredient(i.name).options.some(o=>o===p||o.includes(p))));
       const quality=x.sourceType==='saved'?1:x.sourceType==='generated'?(x.confidence==='high'?0.9:0.7):x.source&&x.source.provider==='Claude'?0.7:0.75;
-      const score=W.pantry*(m.pantryMatchPercent/100)+W.profile*Math.min(1,profile)+W.mood*moodScore+W.missing*Math.max(0,1-m.missingIngredientCount/3)+W.soon*(soonUsed.length?Math.min(1,soonUsed.length/2):0)+W.quality*quality+(prio.length?0.06*prio.length:0)+(goalHits.length?0.03*goalHits.length:0)+(x.favorite?0.02:0);
+      const gk=params.goalKeys||[];
+      if(gk.includes('protein')&&(nut&&nut.protein>=DB.preferences.thresholds.protein||(x.tags||[]).some(t=>/protein/.test(t))))goalHits.push('High protein');
+      if(gk.includes('fiber')&&(nut&&nut.fiber>=DB.preferences.thresholds.fiber||(x.tags||[]).some(t=>/fib/.test(t))))goalHits.push('High fibre');
+      if(gk.includes('lowcal')&&nut&&nut.kcal<=200)goalHits.push('Lower calorie');
+      if(gk.includes('fitness')&&(nut&&nut.protein>=DB.preferences.thresholds.protein||(x.tags||[]).some(t=>/fitness|protein/.test(t))))goalHits.push('Fitness friendly');
+      if((gk.includes('few')||gk.includes('simple'))&&m.requiredIngredientCount<=5)goalHits.push('Few ingredients');
+      if(gk.includes('sweet')&&tags.has('sweet'))goalHits.push('Sweet');
+      const fb=feedbackAffinity(x);
+      const score=fb+W.pantry*(m.pantryMatchPercent/100)+W.profile*Math.min(1,profile)+W.mood*moodScore+W.missing*Math.max(0,1-m.missingIngredientCount/3)+W.soon*(soonUsed.length?Math.min(1,soonUsed.length/2)*((params.goalKeys||[]).includes('soon')?1.6:1):0)+W.quality*quality+(prio.length?0.06*prio.length:0)+(goalHits.length?0.03*goalHits.length:0)+(x.favorite?0.02:0);
       const reasons=[];
       if(m.requiredIngredientCount&&!m.missingIngredientCount)reasons.push(`You already have all ${m.requiredIngredientCount} ingredients.`);
       else if(m.pantryMatchPercent>=70)reasons.push(`Great match — you already have ${m.availableIngredientCount} of the ${m.requiredIngredientCount} ingredients.`);
@@ -2498,7 +2519,8 @@ const RecipeRankingService={
       goalHits.forEach(g=>reasons.push(`Matches your ${g.toLowerCase()} goal (estimated).`));
       const fridge=m.have.filter(i=>i.product&&i.product.location==='fridge').length;if(fridge>=2)reasons.push(`Uses ${fridge} ingredients from your fridge.`);
       if(x.sourceType==='saved'&&x.perfect)reasons.push('This is one of your Perfect Versions.');
-      return {...x,...m,ingredientsHave:m.have,ingredientsMissing:m.missing,tagsSet:tags,nutrition:nut,matchedRequirements:req.met,requirementsNotMet:req.notMet,requirementsUnsure:req.unsure,matchedGoals:goalHits,priorityHits:prio,soonHits:soonUsed.length,recommendationReasons:reasons,score:params.mood.includes('surprise')?score+Math.random()*0.15:score};
+      if(fb>0.02)reasons.push('Similar to recipes you liked.');
+      return {...x,...m,sourceKind:x.sourceType==='saved'?(m.substitutions.length?'adapted':'existing'):x.sourceType==='generated'?'generated':x.aiSource?'ai':'web',ingredientsHave:m.have,ingredientsMissing:m.missing,tagsSet:tags,nutrition:nut,matchedRequirements:req.met,requirementsNotMet:req.notMet,requirementsUnsure:req.unsure,matchedGoals:goalHits,priorityHits:prio,soonHits:soonUsed.length,recommendationReasons:reasons,score:params.mood.includes('surprise')?score+Math.random()*0.15:score};
     }).sort((a,b)=>tier(b)-tier(a)||b.score-a.score);
     function tier(x){const p=x.pantryMatchPercent;return p>=99.9?4:p>=90?3:p>=75?2:x.missingIngredientCount<=2?1:0}
   }
@@ -2514,12 +2536,155 @@ function dedupeRecipes(list){
   }
   return out;
 }
+
+/* =====================================================================
+   SMART RECIPE AI
+   RecipeSafetyValidator · AIRecipeLayer (OpenAIRecipeService → Claude → mockRecipeGenerator)
+   The OpenAI key NEVER lives in this file. The app calls YOUR small server
+   (server/worker.js), which holds OPENAI_API_KEY as a secret.
+   ===================================================================== */
+const RECIPE_TYPES=[['cake','🍰','Cake'],['brownie','🍫','Brownie'],['cookies','🍪','Cookies'],['muffins','🧁','Muffins'],['bread','🍞','Bread'],['pudding','🍮','Pudding'],['dessert','🍨','Dessert'],['snack','🥜','Snack'],['breakfast','🥞','Breakfast treat'],['surprise','🎲','Surprise me']];
+const CREATE_GOALS=[['protein','⚡','High protein'],['lowcal','🪶','Lower calorie'],['fiber','🥕','High fibre'],['simple','👌','Simple'],['few','🥣','Few ingredients'],['sweet','🍬','Sweet'],['fitness','🏋️','Fitness friendly'],['soon','⏳','Use ingredients soon'],['surprise','🎲','Surprise me']];
+const TYPE_RX={cake:/(?<!rice[- ])\bcake|loaf/,brownie:/brownie|blondie/,cookies:/cookie|biscuit/,muffins:/muffin|cupcake/,bread:/bread|loaf|scone|flatbread/,pudding:/pudding|mousse|custard|panna|chia|nice cream/,dessert:/dessert|cake|brownie|blondie|cookie|muffin|pudding|mousse|nice cream|crumble|tart|pie|baked|treat|truffle|bites/,snack:/bite|bar|ball|stack|rice-cake|energy|snack|cracker/,breakfast:/pancake|waffle|bowl|porridge|smoothie|oat|breakfast|muffin|bread/};
+function matchesType(x,k){if(k==='surprise')return true;const t=recipeTags(x);const n=`${x.name} ${x.category||''} ${x.template||''} ${(x.tags||[]).join(' ')}`.toLowerCase();return TYPE_RX[k]?TYPE_RX[k].test(n)||(k==='dessert'&&t.has('dessert'))||(k==='breakfast'&&t.has('breakfast'))||(k==='pudding'&&t.has('pudding')):true}
+/** validateRecipeSafety(recipe, profile) — the single gate every recipe passes before it is shown */
+function validateRecipeSafety(recipe,profile){
+  const ings=(recipe.ingredients||[]).filter(i=>(i.name||'').trim());
+  const hard=[],warnings=[];
+  for(const a of profile.avoid||[]){const hit=ings.find(i=>matchTerm(a,i.name));if(hit)hard.push(`Contains ${hit.name} (on your Avoid list)`)}
+  const checks=checkRequirements(ings,profile.required||[],[]);
+  checks.forEach(c=>{if(c.status==='not_met')hard.push(`Not ${c.requirement.toLowerCase()}: ${c.ingredients.join(', ')}`);else if(c.status==='cannot_confirm')warnings.push(`Check the label for ${c.requirement.toLowerCase()}: ${c.ingredients.join(', ')}`)});
+  for(const c of profile.caution||[]){const hit=ings.find(i=>matchTerm(c,i.name));if(hit)warnings.push(`Contains ${hit.name}, which you marked Caution`)}
+  return {passed:!hard.length,hardViolations:hard,warnings};
+}
+/** makeRecipeSafe — the "safely substitute" path: fixes a requirement clash only with a clearly safe version
+    (your own compliant pantry product, or the lactose-free / gluten-free form of the same ingredient). Anything else is rejected. */
+function makeRecipeSafe(x,prof){
+  const fixes=[];
+  for(const i of x.ingredients){
+    for(const q of prof.required||[]){
+      if(checkIngredient(i.name,q).status!=='violates')continue;
+      const m=matchRecipeIngredientToPantry({name:i.name},{reqs:prof.required});
+      let nn=null;
+      if(m&&(m.level==='exact'||m.level==='compatible')){const p=m.product,b=splitQualifiers(canonicalIngredient(p.baseIngredient||p.productName).key).base;nn=`${productAttr(p,'lactoseFree')?'lactose-free ':''}${productAttr(p,'glutenFree')&&!/gluten/.test(b)?'gluten-free ':''}${b}`;i.pantryId=p.id}
+      else{const pre={'Lactose Free':'lactose-free','Gluten Free':'gluten-free','Dairy Free':'dairy-free'}[q];if(pre){const cand=/flour/.test(i.name)&&q==='Gluten Free'?'gluten-free flour blend':`${pre} ${i.name}`;if((prof.required||[]).every(r=>checkIngredient(cand,r).status!=='violates'))nn=cand}}
+      if(nn){fixes.push(`${i.name} → ${nn}`);i.name=nn}
+    }
+  }
+  if(fixes.length){x.safetyFixes=[...(x.safetyFixes||[]),...fixes]}
+  return x;
+}
+function safetyProfile(params){return {required:params.required||[],avoid:params.avoid||[],caution:DB.ingredients.filter(t=>t.status==='caution').map(t=>t.name)}}
+/** recipe from any AI source → the app's internal shape; pantry match is ALWAYS recomputed locally */
+function aiToResult(r,provider){
+  const ings=[...(r.ingredients||[]),...(r.missingIngredients||[]).filter(m=>!(r.ingredients||[]).some(i=>String(i.name).toLowerCase()===String(m.name).toLowerCase()))];
+  return {id:`ai_${provider}_${canonicalIngredient(r.title||r.name||'idea').key.replace(/\W+/g,'_')}`,sourceType:'external',aiSource:provider,name:String(r.title||r.name||'Recipe idea'),description:String(r.description||''),image:null,category:String(r.category||''),servings:num(r.servings)||null,
+    ingredients:ings.map(i=>({id:uid(),group:'',amount:i.amount==null?'':String(i.amount),unit:String(i.unit||''),name:String(i.name||''),optional:!!i.optional})).filter(i=>i.name),
+    instructions:(r.instructions||[]).map(String).filter(Boolean),prepTime:r.prepTime?`${r.prepTime} min`:'',cookTime:r.cookTime?`${r.cookTime} min`:'',totalMinutes:(num(r.prepTime)||0)+(num(r.cookTime)||0)||null,tags:(r.tags||[]).map(t=>String(t).toLowerCase()),
+    source:{provider:provider==='openai'?'OpenAI':provider==='claude'?'Claude':'Demo',name:provider==='openai'?'Created by AI (OpenAI)':provider==='claude'?'Recipe idea by Claude':'Demo recipe (mock AI)',url:null,externalId:null,attribution:provider==='mock'?'Demo data — connect your AI server for real recipes':'Created by AI for your pantry — not a published recipe',retrievedAt:Date.now()}};
+}
+/** cost control: identical pantry + rules + filters within 24 h reuse the last answer */
+function aiFingerprint(req){
+  const pantry=req.pantry.map(p=>p.name).sort().join('|');
+  const str=JSON.stringify([pantry,req.restrictions,req.avoidIngredients,req.preferences,req.recipeType,req.goal,req.maxMissingIngredients]);
+  let h=0;for(let i=0;i<str.length;i++)h=(h*31+str.charCodeAt(i))|0;return 'k'+(h>>>0).toString(36);
+}
+/** the ONLY data that leaves the device: pantry, food rules, request — no names or other personal data */
+function buildAIRequest(params){
+  return {pantry:normalizePantryIngredients().map(p=>({name:p.canonicalName,details:p.aliases.filter(a=>a!==p.canonicalName).slice(0,3),location:p.location||null})),
+    restrictions:params.required,avoidIngredients:params.avoid,preferences:DB.ingredients.filter(t=>t.pref==='love').map(t=>t.name),dislikes:DB.ingredients.filter(t=>t.pref==='dislike').map(t=>t.name),
+    recipeType:params.recipeTypeLabels.join(', ')||params.moodLabels.join(', ')||'any treat',goal:params.createGoals.join(', ')||params.goals.join(', ')||'',
+    maxMissingIngredients:params.maxMissingIngredients>=99?3:params.maxMissingIngredients,numberOfRecipes:8};
+}
+const OpenAIRecipeService={
+  endpoint(){return (DB.preferences.aiEndpoint||'').trim()},
+  configured(){return /^https:\/\//.test(this.endpoint())},
+  async call(path,body,{signal,timeout=45000}={}){
+    const url=this.endpoint().replace(/\/api\/recipes\/generate\/?$/,'').replace(/\/$/,'')+path;
+    const ctl=new AbortController(),t=setTimeout(()=>ctl.abort('timeout'),timeout);if(signal)signal.addEventListener('abort',()=>ctl.abort());
+    let r;try{r=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body),signal:ctl.signal})}
+    catch(e){clearTimeout(t);throw {code:ctl.signal.aborted?'timeout':'network'}}
+    clearTimeout(t);
+    let j=null;try{j=await r.json()}catch(e){throw {code:'invalid_json'}}
+    if(!r.ok)throw {code:r.status===429?'rate_limited':j&&j.error==='missing_api_key'?'missing_api_key':r.status>=500?'unavailable':'bad_request',detail:j&&j.error};
+    return j;
+  },
+  /** generateRecipesWithOpenAI — POST /api/recipes/generate on your server */
+  async generateRecipesWithOpenAI(req,opts){const j=await this.call('/api/recipes/generate',req,opts);if(!j||!Array.isArray(j.recipes))throw {code:'invalid_json'};if(!j.recipes.length)throw {code:'empty'};return j.recipes},
+  async substitute(req,opts){return this.call('/api/recipes/substitute',req,opts)}
+};
+/** mockRecipeGenerator — DEMO ONLY, used when no AI server is connected and demo mode is on. Always labelled. */
+function mockRecipeGenerator(req){
+  const has=n=>req.pantry.some(p=>p.name===n||p.details.includes(n));
+  const fruit=['banana','apple','pineapple','strawberry'].find(has)||'banana', choc=has('carob powder')?'carob powder':'cocoa powder', prot=has('rice protein')?'rice protein':has('skyr')?'skyr':'greek yogurt';
+  const I=(amount,unit,name)=>({name,amount,unit,inPantry:has(name)});
+  const mk=(title,desc,servings,prep,cook,cat,tags,ings,steps)=>({id:'',title,description:desc,source:'ai',pantryMatch:null,servings,prepTime:prep,cookTime:cook,category:cat,ingredients:ings,missingIngredients:[],instructions:steps,tags,nutrition:{calories:null,protein:null,carbs:null,fat:null,fiber:null,estimated:true},safetyCheck:{passed:true,warnings:[]}});
+  return [
+    mk(`${titleCase(fruit)} ${choc.includes('carob')?'Carob':'Cocoa'} Blondies`,'Soft, fudgy squares built around your fruit.',9,10,25,'Brownie',['sweet'],[I(2,'',fruit),I(90,'g','oat flour'),I(2,'tbsp',choc),I(1,'tsp','baking powder'),I(3,'tbsp','honey'),I(1,'','egg')],['Heat the oven to 180°C.','Mash the fruit and whisk with the egg and honey.','Stir in the dry ingredients.','Bake 22–25 minutes in a lined 20 cm tin.']),
+    mk(`${titleCase(fruit)} Breakfast Cake`,'A tender snacking cake for slow mornings.',8,15,35,'Cake',['breakfast'],[I(2,'',fruit),I(180,'g','oat flour'),I(2,'tsp','baking powder'),I(2,'','egg'),I(120,'ml','milk'),I(3,'tbsp','honey'),I(1,'tsp','cinnamon')],['Heat the oven to 175°C and line a tin.','Mix the dry ingredients.','Whisk the wet ingredients with the fruit and combine.','Bake 30–35 minutes until a skewer comes out clean.']),
+    mk(`${choc.includes('carob')?'Carob':'Chocolate'} Protein Pudding`,'Thick, spoonable and quick.',1,5,0,'Pudding',['high protein'],[I(200,'g','skyr'),I(25,'g',prot),I(1,'tbsp',choc),I(3,'tbsp','milk')],['Whisk the protein with the milk into a paste.','Stir in the skyr and carob until smooth.','Chill 10 minutes.']),
+    mk('Cinnamon Oat Cookies','Chewy, simple, few ingredients.',12,10,14,'Cookies',['simple','few ingredients'],[I(2,'',fruit),I(150,'g','rolled oats'),I(1,'tsp','cinnamon')],['Heat the oven to 180°C.','Mash the fruit and stir in oats and cinnamon.','Shape 12 cookies and bake 12–14 minutes.']),
+    mk(`${titleCase(fruit)} Muffins`,'Classic soft muffins.',10,15,22,'Muffins',['sweet'],[I(180,'g','oat flour'),I(2,'tsp','baking powder'),I(2,'','egg'),I(120,'ml','milk'),I(50,'g','coconut oil'),I(3,'tbsp','honey'),I(150,'g',fruit)],['Heat the oven to 180°C.','Mix the dry ingredients.','Whisk the wet ingredients and fold together with the fruit.','Bake 20–22 minutes.']),
+    mk(`${choc.includes('carob')?'Carob':'Chocolate'} Energy Bites`,'No-bake bites for a quick snack.',12,15,0,'Snack',['snack'],[I(60,'g',prot),I(100,'g','peanut butter'),I(2,'tbsp','honey'),I(2,'tbsp',choc)],['Mix everything into a firm dough.','Roll into 12 balls.','Chill 30 minutes.'])
+  ];
+}
+const AIRecipeLayer={
+  mode(){return OpenAIRecipeService.configured()?'openai':(typeof ui!=='undefined'&&ui.aiReady)?'claude':DB.preferences.aiDemo!==false?'mock':'none'},
+  /** returns {results, notes, provider, cached} — never throws, so local search always survives */
+  async generate(params,opts={}){
+    const req=buildAIRequest(params), key=aiFingerprint(req), notes=[];
+    DB.aiCache=DB.aiCache||{};
+    const c=DB.aiCache[key];
+    if(c&&Date.now()-c.at<864e5&&!opts.refresh)return {results:c.results.map(r=>aiToResult(r,c.provider)),notes:[{kind:'ai',text:'Showing ideas created for this same pantry and search earlier today.'}],provider:c.provider,cached:true};
+    const save=(provider,raw)=>{DB.aiCache[key]={at:Date.now(),provider,results:raw};const ks=Object.keys(DB.aiCache);if(ks.length>12)delete DB.aiCache[ks.sort((a,b)=>DB.aiCache[a].at-DB.aiCache[b].at)[0]];persist()};
+    if(OpenAIRecipeService.configured()){
+      try{const raw=await OpenAIRecipeService.generateRecipesWithOpenAI(req,opts);save('openai',raw);return {results:raw.map(r=>aiToResult(r,'openai')),notes,provider:'openai'}}
+      catch(e){notes.push({kind:'ai',text:({missing_api_key:'Your AI server is missing its OpenAI key.',rate_limited:'The AI service is busy (rate limit). Try again in a minute.',timeout:'The AI took too long to answer.',invalid_json:'The AI answer came back in the wrong shape.',empty:'The AI returned no recipes.',network:"Couldn't reach your AI server."})[e.code]||'The AI service is unavailable right now.'})}
+    }
+    if(typeof ui!=='undefined'&&ui.aiReady){
+      try{const raw=await ClaudeRecipeIdeaProvider.searchRecipes(params,opts);if(raw.length){return {results:raw.map(r=>({...r,aiSource:'claude'})),notes,provider:'claude'}}}catch(e){notes.push({kind:'ai',text:"Claude couldn't create ideas right now."})}
+    }
+    if(DB.preferences.aiDemo!==false){const raw=mockRecipeGenerator(req);return {results:raw.map(r=>aiToResult(r,'mock')),notes:[...notes,{kind:'ai',text:'Demo mode: these AI recipes are sample data. Connect your AI server in Profile for real ones.'}],provider:'mock'}}
+    return {results:[],notes,provider:'none'};
+  }
+};
+/** "Use what I have instead" — local substitution rules first, AI second; the answer must be a real pantry item */
+async function pantrySubstituteFor(ing,recipe,params){
+  const local=findDiscoverySub(ing.name,params.required)||(()=>{const m=matchRecipeIngredientToPantry(ing,{reqs:params.required});return m&&m.level==='possible'?{product:m.product,label:`Use your ${m.product.productName.toLowerCase()} — ${m.note}`}:null})();
+  if(local)return {ok:true,product:local.product,amount:ing.amount,unit:ing.unit,note:local.label,source:'rules'};
+  const req={ingredient:{name:ing.name,amount:ing.amount,unit:ing.unit},recipe:{title:recipe.name,ingredients:recipe.ingredients.map(i=>i.name),instructions:(recipe.instructions||[]).slice(0,6)},pantry:normalizePantryIngredients().map(p=>p.canonicalName),restrictions:params.required,avoidIngredients:params.avoid};
+  let ans=null;
+  try{
+    if(OpenAIRecipeService.configured())ans=await OpenAIRecipeService.substitute(req);
+    else if(typeof ui!=='undefined'&&ui.aiReady){const s=await getSample();ans=await s.json(`A recipe needs "${ing.amount} ${ing.unit} ${ing.name}". Recipe: ${req.recipe.title}; ingredients: ${req.recipe.ingredients.join(', ')}. Pantry: ${req.pantry.join(', ')}. Must-haves: ${req.restrictions.join(', ')||'none'}. Never use: ${req.avoidIngredients.join(', ')||'none'}.
+Is there ONE pantry item that would genuinely work in its place for this recipe's chemistry (same job: structure, fat, liquid, binder, sweetener, flavour…)? Only suggest it if the recipe would still work. Reply with only JSON: {"possible":boolean,"pantryItem":string|null,"amount":string|null,"unit":string|null,"note":"one short sentence on how the result changes","confidence":"high"|"medium"|"low"}`,{cache:false})}
+  }catch(e){return {ok:false,note:"I couldn't check with the AI right now."}}
+  if(!ans||!ans.possible||!ans.pantryItem||ans.confidence==='low')return {ok:false,note:"Nothing in your pantry would do the same job well here — it's better to buy it."};
+  const m=matchRecipeIngredientToPantry({name:ans.pantryItem},{reqs:params.required});
+  if(!m||!(m.level==='exact'||m.level==='compatible'))return {ok:false,note:"The suggestion wasn't something in your pantry, so I didn't use it."};
+  const safe=validateRecipeSafety({ingredients:[{name:ans.pantryItem}]},safetyProfile(params));if(!safe.passed)return {ok:false,note:"The only substitute breaks one of your food rules."};
+  // culinary sanity: same job, and not a wildly different amount
+  const f1=identifyIngredientFunctions([{id:'a',name:ing.name}])[0].functions, f2=identifyIngredientFunctions([{id:'b',name:ans.pantryItem}])[0].functions;
+  if(f1.length&&f2.length&&!f1.some(f=>f2.includes(f)))return {ok:false,note:"The suggested swap doesn't do the same job in this recipe, so it's better to buy it."};
+  const g1=gramsOf({name:ing.name,amount:ing.amount,unit:ing.unit}), g2=gramsOf({name:ans.pantryItem,amount:ans.amount||ing.amount,unit:ans.unit||ing.unit});
+  if(g1&&g2&&(g2/g1<0.25||g2/g1>4))return {ok:false,note:"The suggested swap would change the recipe too much, so it's better to buy it."};
+  return {ok:true,product:m.product,amount:ans.amount||ing.amount,unit:ans.unit||ing.unit,note:ans.note||'',source:OpenAIRecipeService.configured()?'openai':'claude'};
+}
+/** feedback learning — preference only, never stronger than safety */
+function feedbackAffinity(x){
+  const F=DB.recipeFeedback||[];if(!F.length)return 0;
+  const bases=new Set(x.ingredients.map(i=>splitQualifiers(canonicalIngredient(i.name).key).base));let s=0;
+  for(const f of F){const w=f.vote==='nope'?-1:f.vote==='made'?1.5:1;const same=canonicalIngredient(f.name).key===canonicalIngredient(x.name).key;if(same)s+=w*3;else s+=w*(f.bases||[]).filter(b=>bases.has(b)).length*0.25}
+  return Math.max(-0.25,Math.min(0.12,s*0.02));
+}
+
 /* ---------- discovery service ---------- */
 const RecipeDiscoveryService={
   buildRequest(sel){
     const pantry=normalizePantryIngredients();
     return {pantryIngredients:[...new Set(pantry.map(p=>p.canonicalName))],pantryDetail:pantry.map(p=>`${p.displayName}${p.brand?' ('+p.brand+')':''} = ${p.aliases.join('/')}`),
       mood:sel.mood,moodLabels:MOODS.filter(([k])=>sel.mood.includes(k)).map(([,,l])=>l),goals:MOODS.filter(([k])=>MOOD_KIND[k]==='goal'&&sel.mood.includes(k)).map(([,,l])=>l),
+      recipeTypes:sel.types||[],recipeTypeLabels:(sel.types||[]).map(k=>(RECIPE_TYPES.find(t=>t[0]===k)||[])[2]).filter(Boolean),createGoals:(sel.goals||[]).map(k=>(CREATE_GOALS.find(t=>t[0]===k)||[])[2]).filter(Boolean),goalKeys:sel.goals||[],forceAI:!!sel.forceAI,
       priorityIngredients:sel.priority,required:sel.required,avoid:sel.avoid,maxMissingIngredients:sel.onlyWhatIHave?0:sel.maxMissing,onlyWhatIHave:!!sel.onlyWhatIHave,optionalTimeLimit:sel.mood.includes('under15')?15:null};
   },
   searchSavedRecipes:p=>SavedRecipeProvider.searchRecipes(p),
@@ -2530,27 +2695,44 @@ const RecipeDiscoveryService={
       if(!TheMealDBProvider.available())out.notes.push({kind:'external',text:"Online recipe discovery isn't connected in this view. It works when the app runs from your own website."});
       else try{out.results.push(...await TheMealDBProvider.searchRecipes(p,opts))}catch(e){out.notes.push({kind:'external',text:'Online recipe discovery is temporarily unavailable. I can still check your saved recipes.'})}
     }else out.notes.push({kind:'external',text:"Online recipe discovery isn't connected yet."});
-    if(await ClaudeRecipeIdeaProvider.available()){try{out.results.push(...await ClaudeRecipeIdeaProvider.searchRecipes(p,opts))}catch(e){out.notes.push({kind:'claude',text:"Claude couldn't suggest ideas right now."})}}
     return out;
   },
-  /** full search: saved → web → AI → pantry-generated Smart Treats; deduplicated, filtered and ranked against the CURRENT pantry */
+  /** full search: saved (+adapted) → pantry-built Smart Treats → web → AI when fewer than 8 good matches.
+      Every recipe passes validateRecipeSafety before it can be shown. */
   async search(sel,opts={}){
     const p=this.buildRequest(sel);
     if(!p.pantryIngredients.length)return {empty:'pantry',params:p,results:[],notes:[]};
+    opts.progress&&opts.progress(1);
     const saved=await this.searchSavedRecipes(p);
     const ext=await this.searchExternalRecipes(p,opts);
+    opts.progress&&opts.progress(2);
     const generated=generatePantryRecipes(p);
-    let ranked=RecipeRankingService.rank(dedupeRecipes([...saved,...ext.results,...generated]),p);
-    const typeM=p.mood.filter(k=>MOOD_KIND[k]==='type');
-    if(typeM.length){const all=ranked.filter(x=>typeM.every(k=>x.tagsSet.has(k))&&x.missingIngredientCount<=p.maxMissingIngredients);ranked=typeM.length>1&&all.length>=3?ranked.filter(x=>typeM.every(k=>x.tagsSet.has(k))):ranked.filter(x=>typeM.some(k=>x.tagsSet.has(k)))}
-    if(p.optionalTimeLimit)ranked=ranked.filter(x=>x.totalMinutes==null?x.sourceType!=='generated':x.totalMinutes<=p.optionalTimeLimit);
-    if(p.mood.includes('five'))ranked=ranked.filter(x=>x.requiredIngredientCount<=5);
-    if(p.mood.includes('quick'))ranked=ranked.filter(x=>x.tagsSet.has('quick')||x.totalMinutes!=null&&x.totalMinutes<=25);
-    // hard restrictions: Avoid list and MUST HAVE requirements exclude a recipe outright
-    if(p.avoid.length)ranked=ranked.filter(x=>!x.ingredients.some(i=>p.avoid.some(a=>matchTerm(a,i.name))));
-    ranked=ranked.filter(x=>!x.requirementsNotMet.length);
-    const within=ranked.filter(x=>x.missingIngredientCount<=p.maxMissingIngredients);
-    return {params:p,results:within.slice(0,24),nearMisses:within.length?[]:ranked.slice(0,3),notes:ext.notes,counts:{saved:saved.length,web:ext.results.filter(x=>x.source.provider!=='Claude'&&x.source.provider!=='mock').length,ai:ext.results.filter(x=>x.source.provider==='Claude').length,generated:generated.length}};
+    const prof=safetyProfile(p);
+    const filterAll=(list,removed)=>{
+      let r=RecipeRankingService.rank(dedupeRecipes(list),p);
+      r=r.filter(x=>{if(x.aiSource&&!validateRecipeSafety(x,prof).passed){makeRecipeSafe(x,prof);Object.assign(x,matchRecipeToPantry(x.ingredients,p.required));x.ingredientsHave=x.have;x.ingredientsMissing=x.missing}const v=validateRecipeSafety(x,prof);x.safetyCheck=v;if(!v.passed&&removed&&x.aiSource)removed.push(x.name);return v.passed});
+      const typeM=p.mood.filter(k=>MOOD_KIND[k]==='type');
+      if(typeM.length){const all=r.filter(x=>typeM.every(k=>x.tagsSet.has(k))&&x.missingIngredientCount<=p.maxMissingIngredients);r=typeM.length>1&&all.length>=3?r.filter(x=>typeM.every(k=>x.tagsSet.has(k))):r.filter(x=>typeM.some(k=>x.tagsSet.has(k)))}
+      const types=p.recipeTypes.filter(k=>k!=='surprise');if(types.length)r=r.filter(x=>types.some(k=>matchesType(x,k)));
+      if(p.optionalTimeLimit)r=r.filter(x=>x.totalMinutes==null?x.sourceType!=='generated':x.totalMinutes<=p.optionalTimeLimit);
+      if(p.mood.includes('five'))r=r.filter(x=>x.requiredIngredientCount<=5);
+      if(p.mood.includes('quick'))r=r.filter(x=>x.tagsSet.has('quick')||x.totalMinutes!=null&&x.totalMinutes<=25);
+      return r;
+    };
+    let pool=[...saved,...ext.results,...generated], removed=[], notes=[...ext.notes];
+    let ranked=filterAll(pool), within=ranked.filter(x=>x.missingIngredientCount<=p.maxMissingIngredients);
+    let ai=null;
+    if((within.length<8||p.forceAI)&&AIRecipeLayer.mode()!=='none'){
+      opts.progress&&opts.progress(3);
+      ai=await AIRecipeLayer.generate(p,opts);notes.push(...ai.notes);
+      opts.progress&&opts.progress(4);
+      ranked=filterAll([...pool,...ai.results],removed);within=ranked.filter(x=>x.missingIngredientCount<=p.maxMissingIngredients);
+    }
+    if(removed.length)notes.push({kind:'safety',text:`${removed.length} AI ${removed.length===1?'idea was':'ideas were'} removed because ${removed.length===1?'it':'they'} broke your food rules.`});
+    opts.progress&&opts.progress(5);
+    const lowMatch=!within.filter(x=>x.sourceType!=='external'||!x.aiSource).length&&within.length>0;
+    return {params:p,results:within.slice(0,24),nearMisses:within.length?[]:ranked.slice(0,4),notes,lowMatch,aiProvider:ai&&ai.provider,
+      counts:{saved:saved.length,web:ext.results.length,ai:ai?ai.results.length:0,generated:generated.length}};
   }
 };
 /** group results so each recipe appears once */
@@ -2560,7 +2742,8 @@ function groupDiscovery(results){
     ['perfect','Perfect pantry match','Everything required is already in your kitchen.',take(x=>x.missingIngredientCount===0)],
     ['almost','Almost there','Only 1–2 ingredients missing.',take(x=>x.missingIngredientCount<=2)],
     ['smart','More Smart Treats','Created from your pantry.',take(x=>x.sourceType==='generated')],
-    ['web','From the web','',take(x=>x.sourceType==='external'&&x.source.provider!=='Claude')],
+    ['ai','Created by AI','Ideas made for your pantry — check them before you bake.',take(x=>!!x.aiSource)],
+    ['web','From the web','',take(x=>x.sourceType==='external')],
     ['more','More ideas','',take(()=>true)]
   ].filter(g=>g[3].length);
 }
@@ -2822,7 +3005,7 @@ function goBack(){
 function render(){
   const s=SCREENS[ui.screen]||SCREENS.home;
   const main=$('#main'); main.innerHTML=s(); main.className=$('.footbar',main)?'has-foot':'';
-  const tabKey=['recipe','test','revise','rescue','check'].includes(ui.screen)?(ui.from||'recipes'):ui.screen==='edit'?'add':['pantry','cancook','plan','product','identify','discover','discover-results','discovered'].includes(ui.screen)?'home':ui.screen;
+  const tabKey=['recipe','test','revise','rescue','check'].includes(ui.screen)?(ui.from||'recipes'):ui.screen==='edit'?'add':['pantry','cancook','plan','product','identify','discover','discover-results','discovered','create'].includes(ui.screen)?'home':ui.screen;
   $$('.tab').forEach(t=>{const on=t.dataset.s===tabKey;t.classList.toggle('on',on);t.setAttribute('aria-current',on?'page':'false')});
 }
 const unitNoun=r=>{const n=(r.name||'').toLowerCase();for(const [re,w] of [[/muffin/,'muffin'],[/cupcake/,'cupcake'],[/cookie/,'cookie'],[/brownie/,'brownie'],[/\bballs?\b|truffle/,'ball'],[/\bbars?\b/,'bar'],[/pancake/,'pancake']])if(re.test(n))return w;return 'serving'};
@@ -2990,6 +3173,7 @@ function screenProfile(){
     <div>${ings.length?ings.map(ingRow).join(''):`<div class="empty" style="margin-top:10px"><p>${DB.ingredients.length?'Nothing here yet.':'No ingredients recorded yet.'}</p><small>Add them here, or tap any ingredient in a recipe's “Does this work for me?” check.</small></div>`}</div>
   </section>
   ${engineCard()}
+  ${aiServerCard()}
   <section class="card"><h2>Smart Treats learning</h2>
     <p class="sub">When this is on, your Test Kitchen results are recorded so Smart Treats can learn what works for you. It only learns from tests you save — never from guesses.</p>
     <div class="seg" style="margin-top:14px">${[[true,'Learning on'],[false,'Learning off']].map(([k,l])=>`<button class="${(DB.preferences.learning!==false)===k?'on':''}" data-act="learning" data-v="${k}">${l}</button>`).join('')}</div>
@@ -3546,7 +3730,8 @@ function screenPantry(){
   }
   return `<div class="topbar"><div class="left"><button class="iconbtn" data-act="tab" data-s="home">${I.back} Home</button></div><div class="topbar-title">My Pantry</div><div class="right"><button class="iconbtn" data-act="p-add-sheet" aria-label="Add to pantry">${I.plus}</button></div></div>
   <h1 class="wtitle" style="margin-top:8px">My Pantry</h1><p class="sub" style="font-size:17.5px">What I have at home</p>
-  <button class="btn btn-primary btn-xl" style="margin-top:14px" data-act="cancook">${I.spark} What can I make?</button>
+  <button class="btn btn-primary btn-xl" style="margin-top:14px" data-act="create">${I.spark} Create from my pantry</button>
+  <button class="btn btn-soft" style="margin-top:10px" data-act="cancook">🍰 What can I make? (by mood)</button>
   <button class="btn btn-soft" style="margin-top:10px" data-act="p-add-sheet">${I.plus} Add to pantry</button>
   <div class="tabs3">${[['kitchen',`Kitchen (${active.length})`],['good','Good to Have'],['list',`🛒 List (${open.length})`]].map(([k,l])=>`<button class="${tab===k?'on':''}" data-act="ptab" data-v="${k}">${l}</button>`).join('')}</div>
   <div class="search" style="margin-top:14px">${I.search}<input id="pq" type="search" placeholder="What do I have? e.g. milk, fruit, lactose free" value="${esc(ui.pq||'')}" autocomplete="off" aria-label="Search my pantry"></div>
@@ -3654,7 +3839,7 @@ function screenCheck(){
 function discState(){
   if(ui.disc)return ui.disc;
   const P=DB.preferences, gmap={'Higher Protein':'protein','Higher Fiber':'fiber','Lower Calories':'lowcal'};
-  return ui.disc={mood:(P.goals||[]).map(g=>gmap[g]).filter(Boolean),priority:[],soon:false,required:[...(P.bodyReqs||[])],avoid:DB.ingredients.filter(t=>t.status==='avoid').map(t=>t.name),maxMissing:2,onlyWhatIHave:false,editRules:false,state:'idle',res:null};
+  return ui.disc={mood:(P.goals||[]).map(g=>gmap[g]).filter(Boolean),priority:[],soon:false,required:[...(P.bodyReqs||[])],avoid:DB.ingredients.filter(t=>t.status==='avoid').map(t=>t.name),maxMissing:2,onlyWhatIHave:false,editRules:false,state:'idle',res:null,types:[],goals:[],mode:'mood',step:0};
 }
 function soonProducts(){const now=Date.now(),wk=5*864e5;return activeProducts().filter(p=>p.useSoon||p.opened||(p.bestBefore&&new Date(p.bestBefore).getTime()-now<wk))}
 function screenDiscover(){
@@ -3680,7 +3865,7 @@ function screenDiscover(){
     <button class="usepantry ${D.onlyWhatIHave?'on':''}" style="margin-top:12px" data-act="d-only"><span class="pcheck ${D.onlyWhatIHave?'on':''}">${D.onlyWhatIHave?'✓':''}</span><span><b>Use only what I have</b><small>Only recipes I can make right now. Products you've marked as kitchen staples count as available.</small></span></button></section>
   <div class="footbar"><div class="footbar-in"><button class="btn btn-primary btn-xl" data-act="d-find" ${pantry.length?'':'disabled'}>${I.spark} Find recipes</button></div></div>`;
 }
-const srcBadge=x=>x.sourceType==='saved'?'<span class="sbadge mine">📚 My recipe</span>':x.sourceType==='generated'?'<span class="sbadge st">✨ Smart Treat</span>':x.source.provider==='Claude'?'<span class="sbadge st">✨ Idea by Claude</span>':x.source.provider==='mock'?'<span class="sbadge">Mock data</span>':'<span class="sbadge web">🌐 Web recipe</span>';
+const srcBadge=x=>x.sourceKind==='adapted'?'<span class="sbadge mine">🔄 Adapted to your pantry</span>':x.aiSource==='mock'?'<span class="sbadge">🧪 Demo AI</span>':x.aiSource?`<span class="sbadge st">✨ AI ${x.aiSource==='openai'?'· OpenAI':'· Claude'}</span>`:x.sourceType==='saved'?'<span class="sbadge mine">📚 My recipe</span>':x.sourceType==='generated'?'<span class="sbadge st">✨ Smart Treat</span>':x.source.provider==='Claude'?'<span class="sbadge st">✨ Idea by Claude</span>':x.source.provider==='mock'?'<span class="sbadge">Mock data</span>':'<span class="sbadge web">🌐 Web recipe</span>';
 const srcLabel=x=>x.sourceType==='saved'?'From your cookbook':x.sourceType==='generated'?'Created from your pantry':x.source.provider==='Claude'?'Recipe idea by Claude':x.source.provider==='mock'?'Sample recipe (mock data)':x.source.name===x.source.provider?`From ${esc(x.source.provider)}`:`${esc(x.source.name)} · via ${esc(x.source.provider)}`;
 function discImg(x){return x.image?`<img src="${esc(x.image)}" alt="" loading="lazy">`:`<span>${recipeTags(x).has('smoothie')?'🥤':recipeTags(x).has('pudding')?'🍮':recipeTags(x).has('breakfast')?'🥞':recipeTags(x).has('meal')?'🥗':'🧁'}</span>`}
 function discCard(x){
@@ -3691,6 +3876,7 @@ function discCard(x){
   const saved=x.sourceType!=='saved'&&DB.recipes.some(r=>r.externalSource&&r.externalSource.key===x.id);
   return `<div class="dcard"><button class="dimg" data-act="d-open" data-v="${esc(x.id)}">${discImg(x)}<span class="match ${pct>=80?'hi':pct>=50?'mid':'lo'}">${pct}% pantry match</span></button>
   <div class="dbody"><p class="dsrc">${srcBadge(x)} ${srcLabel(x)}</p><h3>${esc(x.name)}</h3>
+  <p class="xofy">✓ ${x.availableIngredientCount} of ${x.requiredIngredientCount} ingredients available${x.missingIngredientCount?` · <b>${x.missingIngredientCount} missing</b>`:''}${x.totalMinutes?` · ⏱ ${x.totalMinutes} min`:''}</p>
   <div class="hv"><div><small>You have</small>${x.ingredientsHave.slice(0,6).map(i=>`<span class="ok">✓ ${esc(cap(canonicalIngredient(i.name).display.toLowerCase()))}</span>`).join('')}${x.ingredientsHave.length>6?`<span class="muted">+${x.ingredientsHave.length-6} more</span>`:''}${!x.ingredientsHave.length?'<span class="muted">—</span>':''}</div>
   <div><small>You need</small>${x.ingredientsMissing.map(i=>`<span class="no">+ ${esc(cap(canonicalIngredient(i.name).display.toLowerCase()))}</span>`).join('')||'<span class="ok">✓ You have everything</span>'}</div></div>
   ${x.substitutions&&x.substitutions.length?`<p class="subs">${x.substitutions.map(t=>'↺ '+esc(t)).join('<br>')}</p>`:''}
@@ -3698,18 +3884,47 @@ function discCard(x){
   ${x.recommendationReasons.length?`<p class="why2">${esc(x.recommendationReasons.slice(0,2).join(' '))}</p>`:''}
   <div class="row-btns" style="margin-top:12px"><button class="btn btn-primary" data-act="d-open" data-v="${esc(x.id)}">View recipe</button>${x.sourceType!=='saved'?`<button class="btn btn-ghost" data-act="d-save" data-v="${esc(x.id)}">${saved?'♥ Saved':'♡ Save'}</button>`:`<button class="btn btn-ghost" data-act="d-addall" data-v="${esc(x.id)}" ${x.missingIngredientCount?'':'disabled'}>🛒 Missing</button>`}</div></div></div>`;
 }
+
+function screenCreate(){
+  const D=discState(), pantry=normalizePantryIngredients(), P=DB.preferences;
+  const chip=(k,e,l,list,act)=>`<button class="mood ${list.includes(k)?'on':''}" data-act="${act}" data-v="${k}" aria-pressed="${list.includes(k)}"><span>${e}</span>${l}</button>`;
+  const mm=D.maxMissing>=99?'any':String(D.onlyWhatIHave?0:D.maxMissing);
+  return `<div class="topbar"><div class="left"><button class="iconbtn" data-act="back">${I.back} Back</button></div><div class="topbar-title">Create from my pantry</div><div class="right" style="min-width:48px"></div></div>
+  <h1 class="wtitle" style="margin-top:8px">✨ Create from my pantry</h1>
+  <p class="sub" style="font-size:17.5px">I'll use everything you have at home — no typing needed.</p>
+  ${pantry.length?`<div class="havecount"><b>${pantry.length}</b><span>ingredients in your kitchen will be used automatically.</span></div>`:`<div class="empty" style="margin-top:16px"><p>Add a few ingredients to My Pantry first.</p><button class="btn btn-primary" data-act="pantry">${I.plus} Open My Pantry</button></div>`}
+  <section><h2>Recipe type</h2><p class="sub">Optional — pick any.</p><div class="moods">${RECIPE_TYPES.map(([k,e,l])=>chip(k,e,l,D.types,'c-type')).join('')}</div></section>
+  <section><h2>Goal</h2><p class="sub">Optional — these shape the ranking.</p><div class="moods">${CREATE_GOALS.map(([k,e,l])=>chip(k,e,l,D.goals,'c-goal')).join('')}</div></section>
+  <section><h2>Maximum missing ingredients</h2><div class="seg wrap5" style="margin-top:12px">${[['0','0 · Pantry only'],['1','1'],['2','2'],['3','3'],['any',"Doesn't matter"]].map(([k,l])=>`<button class="${mm===k?'on':''}" data-act="c-max" data-v="${k}">${l}</button>`).join('')}</div></section>
+  <section class="card"><div class="sec-head" style="margin-bottom:6px"><h2>Using your food rules</h2><button class="linkbtn" data-act="d-editrules">${D.editRules?'Done':'Edit for this search'}</button></div>
+    ${D.editRules?`<div class="chips">${[...new Set([...BODY_REQS,...(P.customReqs||[]).filter(c=>!GOALS.includes(c)),...D.required])].map(q=>`<button class="chip req ${D.required.includes(q)?'on':''}" data-act="d-req" data-v="${esc(q)}">${D.required.includes(q)?I.check:''}${esc(q)}</button>`).join('')}</div><p class="sub" style="margin-top:8px">Only for this search — My Food Rules stay as they are.</p>`
+    :`<div class="badges">${D.required.length?D.required.map(q=>`<span class="tier must" style="font-size:12px">${esc(q)}</span>`).join(''):'<span class="sub">No must-haves saved.</span>'}</div>`}
+    ${D.avoid.length?`<p class="sub" style="margin-top:10px">Never used: ${esc(D.avoid.join(', '))}</p>`:''}
+    <p class="sub" style="margin-top:10px">${({openai:'✨ AI ideas come from your OpenAI server.',claude:'✨ AI ideas come from Claude.',mock:'🧪 Demo mode: AI ideas are sample data until you connect your AI server in Profile.',none:'AI ideas are off — your pantry recipes still work.'})[AIRecipeLayer.mode()]}</p></section>
+  <div class="footbar"><div class="footbar-in"><button class="btn btn-primary btn-xl" data-act="c-find" ${pantry.length?'':'disabled'}>${I.spark} Find my recipes</button></div></div>`;
+}
+function aiServerCard(){
+  const P=DB.preferences, mode=AIRecipeLayer.mode(), n=Object.keys(DB.aiCache||{}).length;
+  return `<section class="card"><h2>Smart Recipe AI</h2>
+  <p class="sub">Creates recipe ideas from your pantry. Your OpenAI key stays on your own small server — never in this app.</p>
+  <label class="field"><span>AI server address</span><small>e.g. https://smart-treats-ai.yourname.workers.dev/api/recipes/generate</small><input class="inp" id="ai-endpoint" inputmode="url" value="${esc(P.aiEndpoint||'')}" placeholder="https://…/api/recipes/generate"></label>
+  <button class="usepantry ${P.aiDemo!==false?'on':''}" style="margin-top:12px" data-act="ai-demo"><span class="pcheck ${P.aiDemo!==false?'on':''}">${P.aiDemo!==false?'✓':''}</span><span><b>Demo mode when no AI is connected</b><small>Shows clearly labelled sample AI recipes so the feature can be tried.</small></span></button>
+  <p class="note" style="margin-top:12px"><b>Now using:</b> ${({openai:'your OpenAI server',claude:'Claude (inside Claude)',mock:'demo data',none:'no AI — pantry recipes only'})[mode]}</p>
+  ${n?`<button class="btn btn-ghost" style="margin-top:10px" data-act="ai-clear">Clear ${n} saved AI ${n===1?'search':'searches'}</button>`:''}</section>`;
+}
 function screenDiscoverResults(){
   const D=discState(), top=`<div class="topbar"><div class="left"><button class="iconbtn" data-act="back">${I.back} Back</button></div><div class="topbar-title">Results</div><div class="right" style="min-width:48px"></div></div>`;
-  if(D.state==='working')return `${top}<div class="working"><div class="whisker">${I.whisk}</div><h1 class="wtitle">Looking through your kitchen…</h1><p class="sub">Checking your cookbook, building Smart Treats from your pantry${TheMealDBProvider.available()?', searching TheMealDB':''}${ui.aiReady?' and asking Claude for ideas':''}.</p><div class="stream" id="w-stream" hidden></div></div>`;
+  if(D.state==='working'){const msgs=['Checking your pantry…','Matching your ingredients…','Checking your dietary settings…','Creating Smart Treats…','Finishing your recipes…'];return `${top}<div class="working"><div class="whisker">${I.whisk}</div><h1 class="wtitle" id="d-prog">${msgs[Math.min(D.step||0,4)]}</h1><div class="wsteps">${msgs.map((m,i)=>`<div class="${i<(D.step||0)?'on':''}"><i>${i<(D.step||0)?I.check:''}</i>${m.replace('…','')}</div>`).join('')}</div><div class="stream" id="w-stream" hidden></div></div>`}
   const res=D.res; if(!res){ui.screen='discover';return screenDiscover()}
   const notes=(res.notes||[]).map(n=>`<p class="note">${esc(n.text)}</p>`).join('');
   if(res.empty==='pantry')return `${top}<div class="empty" style="margin-top:20px"><p>Add a few ingredients to My Pantry first.</p><button class="btn btn-primary" data-act="pantry">Open My Pantry</button></div>`;
   const groups=groupDiscovery(res.results);
-  return `${top}<h1 class="wtitle" style="margin-top:8px">✨ Here's what you can make</h1><p class="sub" style="font-size:17.5px">Based on what you already have.</p>${notes}
+  return `${top}<h1 class="wtitle" style="margin-top:8px">✨ Here's what you can make</h1><p class="sub" style="font-size:17.5px">Based on what you already have.</p>${res.lowMatch?`<p class="note y"><b>We couldn't find an exact match, so Smart Treats created some ideas from your pantry.</b></p>`:''}${notes}
   ${res.counts?`<p class="sub" style="margin-top:6px">${res.results.length} ideas · ${res.counts.generated} Smart Treats built from your pantry${res.counts.saved?` · ${res.counts.saved} saved recipes checked`:''}${res.counts.web?` · ${res.counts.web} from the web`:''}${res.counts.ai?` · ${res.counts.ai} Claude ideas`:''}</p>`:''}
   ${groups.length?groups.map(([k,t,sub,list])=>`<section><div class="sec-head"><h2>${t}</h2></div>${sub?`<p class="sub" style="margin:-6px 0 12px">${sub}</p>`:''}<div class="stack">${list.map(discCard).join('')}</div></section>`).join('')
-  :`<div class="empty" style="margin-top:18px"><p>Nothing matched closely enough.</p><small>Try allowing 1–3 missing ingredients.</small><button class="btn btn-ghost" data-act="back">Change my search</button></div>
-    ${res.nearMisses&&res.nearMisses.length?`<section><div class="sec-head"><h2>Closest ideas</h2></div><div class="stack">${res.nearMisses.map(discCard).join('')}</div></section>`:''}`}`;
+  :`<div class="empty" style="margin-top:18px"><p>Nothing matched closely enough.</p><small>Try allowing 1–3 missing ingredients${AIRecipeLayer.mode()==='none'?'':', or ask the AI below'}.</small><button class="btn btn-ghost" data-act="back">Change my search</button></div>
+    ${res.nearMisses&&res.nearMisses.length?`<section><div class="sec-head"><h2>Closest ideas</h2></div><div class="stack">${res.nearMisses.map(discCard).join('')}</div></section>`:''}`}
+  ${AIRecipeLayer.mode()!=='none'?`<button class="btn btn-soft" style="margin-top:20px" data-act="d-moreai">${I.spark} Create more ideas with AI</button><p class="sub" style="margin-top:6px;text-align:center">${({openai:'Uses your OpenAI server',claude:'Uses Claude',mock:'Demo mode — sample ideas'})[AIRecipeLayer.mode()]}</p>`:''}`;
 }
 function screenDiscovered(){
   const D=discState(), x=D.res&&[...D.res.results,...(D.res.nearMisses||[])].find(r=>r.id===ui.did);
@@ -3728,13 +3943,18 @@ function screenDiscovered(){
   ${m.substitutions.length?`<p class="note">${m.substitutions.map(t=>'↺ '+esc(t)).join('<br>')}</p>`:''}
   <section class="card pcheck-card"><p class="tier nice" style="display:inline-block">Pantry check</p>
     <h2 style="margin-top:10px">You already have ${m.availableIngredientCount} of ${m.requiredIngredientCount} ingredients</h2>
+    <h3 class="ptitle">✓ You have</h3>
     <div class="plist" style="margin-top:12px">${m.have.map(i=>`<div class="yi-row">${HAVE_IC}<div><b>${esc(lineOf(i))}</b><small>${i.via==='tap'?'From the tap':i.via==='staple'?'Kitchen staple':esc(String(i.via).toUpperCase())}${(i.level==='compatible'||i.level==='substitute')&&i.note?' · '+esc(i.note):''}</small></div></div>`).join('')}</div>
-    ${m.missing.length?`<h3 class="ptitle">Missing</h3><div class="plist">${m.missing.map(i=>{const k=canonicalIngredient(i.name).key,on=shoppingFind(k);return `<div class="yi-row need">${NEED_IC}<div style="flex:1"><b>${esc(lineOf(i))}</b>${i.possible?`<small>You have ${esc(i.possible)} — Make It Mine can decide if it works</small>`:''}</div>${on?'<span class="muted small">🛒 On list</span>':`<button class="mini-btn" data-act="d-add1" data-v="${esc(i.id)}">+ Add</button>`}</div>`}).join('')}</div>
-    <button class="btn btn-soft" style="margin-top:12px" data-act="d-addall" data-v="${esc(x.id)}">🛒 Add missing to shopping list</button>`:'<p class="note g" style="margin-top:12px"><b>You have everything.</b></p>'}
+    ${m.missing.length?`<h3 class="ptitle">🛒 You need</h3><div class="plist">${m.missing.map(i=>{const k=canonicalIngredient(i.name).key,on=shoppingFind(k);return `<div class="yi-row need">${NEED_IC}<div style="flex:1"><b>${esc(lineOf(i))}</b>${i.possible?`<small>You have ${esc(i.possible)} — Make It Mine can decide if it works</small>`:''}</div><div class="miss-acts">${on?'<span class="muted small">🛒 On list</span>':`<button class="mini-btn" data-act="d-add1" data-v="${esc(i.id)}">🛒 Add to shopping list</button>`}<button class="mini-btn" data-act="d-subst" data-v="${esc(i.id)}">↺ Use what I have instead</button></div></div>`}).join('')}</div>
+    <button class="btn btn-soft" style="margin-top:12px" data-act="d-addall" data-v="${esc(x.id)}">🛒 Add all missing ingredients</button>`:'<p class="note g" style="margin-top:12px"><b>You have everything.</b></p>'}
     ${m.optional.length?`<p class="sub" style="margin-top:10px">Optional: ${esc(m.optional.map(i=>i.name).join(', '))}</p>`:''}</section>
   <section class="card"><h2>Nutrition</h2>${nutri?`<p class="sub">Per serving, estimated from typical values.</p>${nutTable([{label:'Per serving',per:nutri}])}`:'<p class="sub" style="margin-top:6px">Nutrition information not available.</p>'}</section>
   ${x.ingredients.length?`<section class="card"><h2>Ingredients</h2>${ingListHTML(x.ingredients)}</section>`:''}
   ${x.instructions&&x.instructions.length?`<section class="card"><h2>Method</h2>${stepsListHTML(x.instructions)}</section>`:x.source&&x.source.url?`<p class="note">The method is on the <a href="${esc(x.source.url)}" target="_blank" rel="noopener">original recipe page</a>.</p>`:''}
+  ${x.safetyFixes&&x.safetyFixes.length?`<p class="note g"><b>Made safe for your food rules:</b> ${esc(x.safetyFixes.join('; '))}.</p>`:''}
+  ${x.safetyCheck&&x.safetyCheck.warnings.length?`<p class="note y"><b>Before you bake:</b> ${esc(x.safetyCheck.warnings.join('; '))}.</p>`:''}
+  ${x.aiSource?`<p class="sub" style="margin-top:10px">AI-created recipe — the method and amounts are a starting point. Nutrition, if shown, is calculated from typical ingredient values, not from the AI.</p>`:''}
+  <section><h2>How was it?</h2><div class="fb">${[['nope','♡','Not for me'],['like','♥','I like this'],['made','★','Made it']].map(([k,ic,l])=>{const on=(DB.recipeFeedback||[]).some(f=>f.key===x.id&&f.vote===k);return `<button class="${on?'on':''}" data-act="d-fb" data-v="${k}" data-id="${esc(x.id)}"><span>${ic}</span>${l}</button>`}).join('')}</div></section>
   ${x.sourceType!=='saved'?`<button class="btn btn-ghost" style="margin-top:16px" data-act="d-save" data-v="${esc(x.id)}">${saved?'♥ Saved to My Recipes':'♡ Save to My Recipes'}</button>`:`<button class="btn btn-ghost" style="margin-top:16px" data-act="open" data-id="${esc(x.id)}">Open in My Recipes</button>`}
   <div class="footbar"><div class="footbar-in"><button class="btn btn-primary" data-act="d-mine" data-v="${esc(x.id)}">${I.spark} Make It Mine</button></div></div>`;
 }
@@ -3763,7 +3983,7 @@ function screenTest(){
   ${r.tests.length?`<section>${fold('Earlier tests',testsHTML(r),r.tests.length)}</section>`:''}
   <div class="footbar"><div class="footbar-in"><button class="btn btn-primary" data-act="test-perfect">${I.star} Save as my Perfect Version</button></div></div>`;
 }
-const SCREENS={discover:screenDiscover,'discover-results':screenDiscoverResults,discovered:screenDiscovered,product:screenProduct,identify:screenIdentify,pantry:screenPantry,cancook:screenCanCook,plan:screenPlan,check:screenCheck,rescue:screenRescue,home:screenHome,recipes:screenRecipes,kitchen:screenKitchen,profile:screenProfile,recipe:screenRecipe,edit:screenEdit,test:screenTest,add:screenAdd,revise:screenRevise};
+const SCREENS={create:screenCreate,discover:screenDiscover,'discover-results':screenDiscoverResults,discovered:screenDiscovered,product:screenProduct,identify:screenIdentify,pantry:screenPantry,cancook:screenCanCook,plan:screenPlan,check:screenCheck,rescue:screenRescue,home:screenHome,recipes:screenRecipes,kitchen:screenKitchen,profile:screenProfile,recipe:screenRecipe,edit:screenEdit,test:screenTest,add:screenAdd,revise:screenRevise};
 
 /* ============ sheets ============ */
 let sheetState={};
@@ -4415,7 +4635,7 @@ function saveDiscovered(x){
   const O=discoveredToImport(x);O.tempText=x.tempText||'';
   r=newRecipe({name:x.name,description:x.description||'',category:guessCat(x.name),servings:x.servings||'',status:'idea',tempText:x.tempText||'',original:clone(O),originalSource:x.source&&x.source.url||'',
     adaptedIngredients:O.ingredients.map(i=>({...i,id:uid(),n:{}})),adaptedInstructions:[...O.instructions],prepTime:x.prepTime||'',cookTime:x.cookTime||'',
-    sourceType:'discovered',externalSource:{...x.source,key:x.id},referencePhoto:null});
+    sourceType:'discovered',externalSource:{...x.source,key:x.id},recipeSource:x.sourceKind==='adapted'?'adapted':x.aiSource?'ai':'existing',versionNotes:(x.subsApplied||[]).join('. '),referencePhoto:null});
   r.versions=[{id:uid(),n:1,createdAt:Date.now(),label:'Version 1',source:'manual',ingredients:clone(r.adaptedIngredients),instructions:[...r.adaptedInstructions],servings:r.servings,changes:[]}];
   DB.recipes.unshift(r);persist();return r;
 }
@@ -4428,8 +4648,10 @@ Object.assign(ACT,{
   'd-req':el=>{const a=ui.disc.required,v=el.dataset.v,i=a.indexOf(v);i>=0?a.splice(i,1):a.push(v);keepScroll(()=>{})},
   'd-max':el=>{ui.disc.maxMissing=+el.dataset.v;ui.disc.onlyWhatIHave=false;keepScroll(()=>{})},
   'd-only':()=>{ui.disc.onlyWhatIHave=!ui.disc.onlyWhatIHave;keepScroll(()=>{})},
-  'd-find':async()=>{const D=ui.disc;D.state='working';D.res=null;nav('discover-results');
-    try{D.res=await RecipeDiscoveryService.search(D,{onText:streamTo('Asking Claude for ideas')})}catch(e){console.error(e);D.res={results:[],notes:[{text:'Something went wrong while searching. Your pantry and recipes are fine — try again.'}],params:{}}}
+  'd-find':async(el,opts={})=>{const D=ui.disc;D.state='working';D.step=0;D.res=null;if(!opts.stay)nav('discover-results');else render();
+    const msgs=['Checking your pantry…','Matching your ingredients…','Checking your dietary settings…','Creating Smart Treats…','Finishing your recipes…'];
+    const progress=n=>{D.step=n;const h=$('#d-prog');if(h){h.textContent=msgs[Math.min(n,4)];$$('.wsteps div').forEach((d,i)=>{const on=i<n;d.classList.toggle('on',on);$('i',d).innerHTML=on?I.check:''})}};
+    try{D.res=await RecipeDiscoveryService.search({...D,forceAI:!!opts.forceAI},{onText:streamTo('Asking the AI for ideas'),progress,refresh:!!opts.forceAI})}catch(e){console.error(e);D.res={results:[],notes:[{text:'Something went wrong while searching. Your pantry and recipes are fine — try again.'}],params:{}}}
     D.res.results=D.res.results.filter(x=>!(x.sourceType==='external'&&DB.recipes.some(r=>r.externalSource&&r.externalSource.key===x.id)));
     D.state='done';if(ui.screen==='discover-results'){render();window.scrollTo(0,0)}},
   'd-open':el=>{const x=discFind(el.dataset.v);if(!x)return;if(x.sourceType==='saved'){ui.from='home';nav('recipe',{id:x.id})}else{ui.did=x.id;nav('discovered')}},
@@ -4444,6 +4666,33 @@ Object.assign(ACT,{
   'pf-staple':()=>{ui.pdraft.staple=!ui.pdraft.staple;keepScroll(()=>{})},
   'pf-soon':()=>{ui.pdraft.useSoon=!ui.pdraft.useSoon;keepScroll(()=>{})},
   'ps-soon':()=>{const p=findProduct(sheetState.pid);p.useSoon=!p.useSoon;persist();closeSheet();toast(p.useSoon?`${p.productName} marked Use soon`:'Use soon removed');keepScroll(()=>{})}
+});
+
+
+Object.assign(ACT,{
+  create:()=>{discState();const D=ui.disc;D.mode='create';D.state='idle';nav('create')},
+  'c-type':el=>{const a=ui.disc.types,v=el.dataset.v,i=a.indexOf(v);i>=0?a.splice(i,1):a.push(v);keepScroll(()=>{})},
+  'c-goal':el=>{const D=ui.disc,a=D.goals,v=el.dataset.v,i=a.indexOf(v);i>=0?a.splice(i,1):a.push(v);
+    if(v==='soon'){const ks=soonProducts().map(p=>splitQualifiers(canonicalIngredient(p.baseIngredient||p.productName).key).base);D.priority=a.includes('soon')?[...new Set([...D.priority,...ks])]:D.priority.filter(k=>!ks.includes(k))}
+    if(v==='surprise'){const m=D.mood,j=m.indexOf('surprise');a.includes('surprise')?(j<0&&m.push('surprise')):(j>=0&&m.splice(j,1))}
+    keepScroll(()=>{})},
+  'c-max':el=>{const D=ui.disc,v=el.dataset.v;D.onlyWhatIHave=v==='0';D.maxMissing=v==='any'?99:+v;keepScroll(()=>{})},
+  'c-find':()=>{const D=ui.disc;D.mood=D.mood.filter(k=>k==='surprise'||MOOD_KIND[k]!=='type');ACT['d-find']()},
+  'd-moreai':()=>ACT['d-find'](null,{forceAI:true,stay:true}),
+  'd-subst':async el=>{const x=discFind(ui.did),ing=x&&x.ingredients.find(i=>i.id===el.dataset.v);if(!ing)return;
+    openSheet(`<h2>Use what I have instead</h2><p class="sub" style="margin-top:6px">Looking for something in your pantry that does the same job as <b>${esc(ing.name)}</b>…</p>`);
+    const r=await pantrySubstituteFor(ing,x,RecipeDiscoveryService.buildRequest(ui.disc));
+    sheetState={sub:r,iid:ing.id};
+    openSheet(r.ok?`<h2>You can use your ${esc(r.product.productName)}</h2><p class="sub" style="margin-top:8px">${esc(r.note)}</p><p class="sub" style="margin-top:6px">${esc([r.amount,r.unit].filter(Boolean).join(' '))} instead of ${esc(lineOf(ing))} · ${r.source==='rules'?'checked by Smart Treats rules':'suggested by AI, checked against your pantry and food rules'}</p><button class="btn btn-primary" data-act="d-subuse">Use this instead</button><button class="btn btn-ghost" data-act="sheet-close">Keep it on the list</button>`
+      :`<h2>Better to buy it</h2><p class="sub" style="margin-top:8px">${esc(r.note)}</p><button class="btn btn-ghost" data-act="sheet-close">OK</button>`)},
+  'd-subuse':()=>{const x=discFind(ui.did),r=sheetState.sub,ing=x.ingredients.find(i=>i.id===sheetState.iid);
+    const old=ing.name;ing.name=r.product.baseIngredient||r.product.productName;ing.pantryId=r.product.id;if(r.amount)ing.amount=String(r.amount);if(r.unit!=null)ing.unit=r.unit;
+    x.subsApplied=[...(x.subsApplied||[]),`Using your ${r.product.productName.toLowerCase()} instead of ${old}`];closeSheet();toast('Swapped for something you have');keepScroll(()=>{})},
+  'd-fb':el=>{const x=discFind(el.dataset.id)||{id:el.dataset.id,name:'',ingredients:[]};DB.recipeFeedback=(DB.recipeFeedback||[]).filter(f=>!(f.key===x.id&&f.vote===el.dataset.v));
+    const on=!(el.classList.contains('on'));if(on)DB.recipeFeedback.push({key:x.id,name:x.name,vote:el.dataset.v,bases:x.ingredients.map(i=>splitQualifiers(canonicalIngredient(i.name).key).base),date:Date.now()});
+    if(DB.recipeFeedback.length>200)DB.recipeFeedback.splice(0,DB.recipeFeedback.length-200);persist();toast(on?({nope:"Got it — fewer like this",like:"Noted — more like this",made:"Lovely! Saved as made"})[el.dataset.v]:'Removed');keepScroll(()=>{})},
+  'ai-demo':()=>{DB.preferences.aiDemo=DB.preferences.aiDemo===false;persist();keepScroll(()=>{})},
+  'ai-clear':()=>{DB.aiCache={};persist();toast('Saved AI searches cleared');keepScroll(()=>{})}
 });
 
 /* ============ events ============ */
@@ -4462,6 +4711,7 @@ document.addEventListener('input',e=>{
   if(t.id==='rq'){ui.rq=t.value;$('#rlist').innerHTML=recipeList();return}
   if(t.id==='have'){ui.have=t.value;return}
   if(d.pref){DB.preferences.thresholds[d.pref]=num(t.value);persistSoon();return}
+  if(t.id==='ai-endpoint'){DB.preferences.aiEndpoint=t.value.trim();persistSoon();return}
   if(t.id==='pq'){ui.pq=t.value;ui.pqAI=null;const b=$('#pq-res');if(b)b.innerHTML=pantrySearchHTML();return}
   if(d.pf&&ui.pdraft){const num_=['amount','remainingAmount','drainedWeight'];let v=t.value;if(num_.includes(d.pf))v=v.trim()===''?null:v.trim();ui.pdraft[d.pf]=v;if(d.pf==='productName'&&ui.pid==='new'&&!ui.pdraft._baseTouched){ui.pdraft.baseIngredient=canonicalIngredient(v).key;const bi=$('[data-pf="baseIngredient"]');if(bi)bi.value=ui.pdraft.baseIngredient}if(d.pf==='baseIngredient')ui.pdraft._baseTouched=true;return}
   if(d.test){const r=getR(ui.id);r.testDraft[d.test]=t.value;persistSoon();return}

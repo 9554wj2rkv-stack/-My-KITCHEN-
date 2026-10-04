@@ -1,0 +1,10 @@
+name = "smart-treats-ai"
+main = "worker.js"
+compatibility_date = "2025-01-01"
+
+[vars]
+# Your GitHub Pages address (no trailing slash). Several can be comma-separated.
+ALLOWED_ORIGIN = "https://YOUR-GITHUB-NAME.github.io"
+# OPENAI_MODEL = "gpt-4.1-mini"
+
+# The key is a SECRET — never put it here. Run:  npx wrangler secret put OPENAI_API_KEY
