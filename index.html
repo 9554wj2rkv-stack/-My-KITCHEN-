@@ -451,6 +451,13 @@ select.inp{appearance:none;-webkit-appearance:none;background-image:linear-gradi
 .dhero{margin:0 -20px;aspect-ratio:16/10;max-height:340px;background:var(--cream);display:grid;place-items:center;font-size:72px;overflow:hidden}
 .dhero img{width:100%;height:100%;object-fit:cover}
 .loc-staple{background:var(--pista-soft);color:var(--pista-ink)}
+/* ---------- discovery v2 ---------- */
+.sbadge{display:inline-block;font:900 11.5px/1 var(--font);letter-spacing:.05em;text-transform:uppercase;padding:6px 9px;border-radius:999px;background:var(--cream);color:var(--choc);margin-right:4px;vertical-align:1px}
+.sbadge.st{background:var(--rasp-soft);color:var(--rasp-ink)}.sbadge.web{background:#DDEBFF;color:#1F4F8F}.sbadge.mine{background:var(--butter-soft);color:var(--butter-ink)}
+.subs{margin-top:8px;font:700 14.5px/1.45 var(--font);color:var(--rasp-ink)}
+.match-inline{font:900 13px var(--font);text-transform:uppercase;letter-spacing:.03em;padding:8px 12px;border-radius:999px}
+.match-inline.hi{background:#2F8F46;color:#fff}.match-inline.mid{background:var(--butter);color:#3E2A00}
+.loc-soon{background:var(--peach-soft);color:var(--peach-ink)}
 /* ---------- results ---------- */
 .ready-badge{display:inline-flex;align-items:center;gap:8px;background:var(--rasp-soft);color:var(--rasp-ink);font:900 15px var(--font);padding:8px 14px;border-radius:999px}
 .ready-badge svg{width:18px;height:18px;stroke-width:3}
@@ -1201,7 +1208,7 @@ const REF={
  'banana':[89,1.1,23,0.3,2.6,12,225,118],'applesauce':[42,0.2,11,0.1,1.2,10,244],'pumpkin puree':[34,1.1,8,0.3,2.9,3.3,245],'zucchini':[17,1.2,3.1,0.3,1,2.5,124,200],'carrot':[41,0.9,10,0.2,2.8,4.7,110,61],
  'blueberry':[57,0.7,14,0.3,2.4,10,148],'raspberry':[52,1.2,12,0.7,6.5,4.4,123],'strawberry':[32,0.7,7.7,0.3,2,4.9,152,12],'apple':[52,0.3,14,0.2,2.4,10,125,180],'date':[282,2.5,75,0.4,8,63,147,8],'raisin':[299,3,79,0.5,3.7,59,145],'lemon juice':[22,0.4,6.9,0.2,0.3,2.5,244],'avocado':[160,2,8.5,15,6.7,0.7,150,150],
  'baking soda':[0,0,0,0,0,0,220],'baking powder':[53,0,28,0,0.2,0,192],'salt':[0,0,0,0,0,0,288],'cinnamon':[247,4,81,1.2,53,2.2,125],'vanilla':[288,0.1,13,0.1,0,13,208],'xanthan gum':[333,0,78,0,78,0,144],
- 'collagen':[360,90,0,0,0,0,96],'whey protein':[400,80,8,6,0,4,96],'gelatine':[335,86,0,0,0,0,144],'gelatin':[335,86,0,0,0,0,144],
+ 'collagen':[360,90,0,0,0,0,96],'carob powder':[222,4.6,89,0.7,40,49,103],'carob':[222,4.6,89,0.7,40,49,103],'rice protein':[380,78,8,3,4,1,96],'protein powder':[390,78,8,4,3,3,96],'whey protein':[400,80,8,6,0,4,96],'gelatine':[335,86,0,0,0,0,144],'gelatin':[335,86,0,0,0,0,144],
  'peanut butter':[588,25,20,50,6,9,258],'almond butter':[614,21,19,56,10,4.4,256],'sunflower seed butter':[617,17,23,55,6,10,256],'tahini':[595,17,21,54,9,0.5,240],
  'dark chocolate':[598,7.8,46,43,11,24,170],'chocolate':[598,7.8,46,43,11,24,170],'chocolate chip':[480,4,64,30,6,55,170],'milk chocolate':[535,7.6,59,30,3.4,52,170],'white chocolate':[539,5.9,59,32,0.2,59,170],
  'instant coffee':[353,12,75,0.5,0,0,96],'espresso powder':[353,12,75,0.5,0,0,96],
@@ -1273,7 +1280,7 @@ function compareNutrition(a,b){
 const ING_DESCRIPTORS=new Set(['unsweetened','certified','organic','fresh','large','small','medium','ripe','extra','finely','roughly','coarsely','chopped','grated','melted','softened','room','temperature','mashed','sifted','packed','heaping','level','pure','good','quality','raw','frozen','cold','warm','hot','whole','plain','natural','optional','divided','serving','garnish','taste','squeezed','thinly','sliced','diced','cubed','peeled','pitted','toasted','about','approx','approximately','store','bought','homemade','dry','dried','ground_','vanilla_']);
 const ING_STOP=new Set(['a','an','the','of','and','for','to','at','in','into','or','with','plus','some','few','your','my']);
 const ING_TOKEN={yoghurt:'yogurt',yoghurts:'yogurt',bicarbonate:'bicarbonate',chocolates:'chocolate'};
-const ING_ALIAS={'cocoa':'cocoa powder','unsweetened cocoa':'cocoa powder','cacao powder':'cacao powder','vanilla extract':'vanilla','vanilla essence':'vanilla','bicarbonate soda':'baking soda','bicarb':'baking soda','bicarbonate':'baking soda','icing sugar':'powdered sugar','confectioner sugar':'powdered sugar','rolled oat':'oat','old fashioned oat':'oat','porridge oat':'oat','oatmeal':'oat','gluten-free rolled oat':'gluten-free oat','garbanzo bean':'chickpea','collagen peptide':'collagen','collagen powder':'collagen','egg white':'egg white','egg yolk':'egg yolk','greek style yogurt':'greek yogurt','coconut oil':'coconut oil','chocolate chip':'chocolate chip','choc chip':'chocolate chip','maple':'maple syrup','almond meal':'almond flour','ground almond':'almond flour','tap water':'water','lukewarm water':'water','boiling water':'water'};
+const ING_ALIAS={'carob':'carob powder','carob flour':'carob powder','rice protein powder':'rice protein','brown rice protein':'rice protein','protein':'protein powder','rice cracker':'rice cake','puffed rice cake':'rice cake','peanut kernel':'peanut','salted peanut':'peanut','sea salt flake':'salt flake','cocoa':'cocoa powder','unsweetened cocoa':'cocoa powder','cacao powder':'cacao powder','vanilla extract':'vanilla','vanilla essence':'vanilla','bicarbonate soda':'baking soda','bicarb':'baking soda','bicarbonate':'baking soda','icing sugar':'powdered sugar','confectioner sugar':'powdered sugar','rolled oat':'oat','old fashioned oat':'oat','porridge oat':'oat','oatmeal':'oat','gluten-free rolled oat':'gluten-free oat','garbanzo bean':'chickpea','collagen peptide':'collagen','collagen powder':'collagen','egg white':'egg white','egg yolk':'egg yolk','greek style yogurt':'greek yogurt','coconut oil':'coconut oil','chocolate chip':'chocolate chip','choc chip':'chocolate chip','maple':'maple syrup','almond meal':'almond flour','ground almond':'almond flour','tap water':'water','lukewarm water':'water','boiling water':'water'};
 const ING_NOPLURAL=new Set(['molasses','hummus','asparagus','couscous','swiss','glass','cress','gas','bass','oats_']);
 function singular(w){
   if(w.length<=3||ING_NOPLURAL.has(w)||/ss$|us$|is$/.test(w))return w;
@@ -2140,6 +2147,204 @@ const DISCOVERY_CONFIG={
   weights:{pantry:0.45,requirements:0.25,goals:0.15,priority:0.10,convenience:0.05},
   maxExternalLookups:10
 };
+
+/* =====================================================================
+   recipeEngine — pantry-driven Smart Treat generator (local, works offline)
+   pantryNormalizer → ingredientFunctions(roles) → recipeTemplates →
+   recipeGenerator → recipeValidator → substitutionEngine → recipeRanker → recipeDeduplicator
+   Nothing here is tied to today's pantry: templates ask for FUNCTIONS, and
+   whatever pantry products fill those functions become the recipe.
+   ===================================================================== */
+const ROLE_RULES=[
+  ['mash',/^(banana|avocado|applesauce|pumpkin puree|sweet potato puree|mashed sweet potato)$/],
+  ['grate',/^(carrot|apple|pear|zucchini|courgette|beetroot|sweet potato)$/],
+  ['chunk',/^(pineapple|mango|peach|blueberry|raspberry|strawberry|cherry|apple|pear|banana|kiwi|plum|blackberry)$/],
+  ['berry',/(blueberry|raspberry|strawberry|blackberry|cherry)$/],
+  ['flour',/(flour|^oat$|gluten-free oat|ground almond|almond meal|buckwheat|spelt)/],
+  ['oats',/(^| )oat$|rolled oat|gluten-free oat$/],
+  ['protein',/(rice protein|protein powder|whey|pea protein|collagen)/],
+  ['leaven',/^(baking powder|gluten-free baking powder)$/],
+  ['soda',/^baking soda$/],
+  ['egg',/^egg$/],
+  ['milk',/(^| )milk$|^(oat|almond|soy|rice|coconut) milk$/],
+  ['fat',/^(butter|plant butter|coconut oil|oil|rapeseed oil|olive oil|sunflower oil|ghee)$/],
+  ['sweet',/^(honey|maple syrup|agave|agave syrup|sugar|brown sugar|coconut sugar|date syrup)$/],
+  ['date',/^(date|medjool date)$/],
+  ['cocoa',/^(cocoa powder|cacao powder|carob powder)$/],
+  ['spice',/^(cinnamon|ginger|cardamom|nutmeg|mixed spice|pumpkin spice)$/],
+  ['vanilla',/^vanilla$/],
+  ['acid',/^(lemon juice|lime juice|lemon|lime|apple cider vinegar)$/],
+  ['salt',/^(salt|salt flake|sea salt)$/],
+  ['creamy',/^(skyr|greek yogurt|yogurt|quark|cottage cheese|cream cheese|silken tofu|coconut yogurt|lactose-free skyr)$/],
+  ['nutbutter',/(peanut butter|almond butter|nut butter|sunflower seed butter|tahini)$/],
+  ['crunch',/^(peanut|almond|walnut|hazelnut|pecan|cashew|pumpkin seed|sunflower seed|chia seed|flaxseed|ground flax|coconut flake|shredded coconut|granola)$/],
+  ['seed',/^(pumpkin seed|sunflower seed|chia seed|flaxseed|sesame seed|ground flax)$/],
+  ['ricecake',/^rice cake$/],
+  ['rice',/(^| )rice$/],
+  ['veg',/^(cauliflower|carrot|broccoli|zucchini|courgette|spinach|pepper|onion|pea|sweet potato|beetroot|cabbage|kale)$/],
+  ['chocolate',/(dark chocolate|chocolate chip|baking chocolate|carob chip|milk chocolate)$/]
+];
+/** pantryRoles() — the pantry as a pool of FUNCTIONS (safe for the current must-haves / avoid list only) */
+function pantryRoles(params){
+  const items=normalizePantryIngredients(), pool={};
+  const soonIds=new Set(activeProducts().filter(p=>p.useSoon||p.opened||(p.bestBefore&&new Date(p.bestBefore).getTime()-Date.now()<5*864e5)).map(p=>p.id));
+  for(const it of items){
+    const p=findProductSafe(it.id); if(!p)continue;
+    if((params.avoid||[]).some(a=>matchTerm(a,it.canonicalName)||matchTerm(a,it.displayName)))continue;
+    const desc=productDescriptor(p);
+    if((params.required||[]).some(q=>checkIngredient(desc,q).status==='violates'))continue;
+    const keys=[it.canonicalName,...it.aliases.map(a=>splitQualifiers(a).base)];
+    const preserved=/pickl|brine|vinegar/.test(`${p.preparation||''} ${p.productName}`.toLowerCase());
+    for(const [role,re] of ROLE_RULES){if(preserved&&['mash','grate','chunk','berry','veg'].includes(role))continue;if(keys.some(k=>re.test(k))){(pool[role]=pool[role]||[]).push({...it,product:p,soon:soonIds.has(it.id),prio:(params.priorityIngredients||[]).some(x=>it.aliases.includes(x)||it.canonicalName===x)})}}
+  }
+  for(const r in pool)pool[r].sort((a,b)=>(b.prio-a.prio)||(b.soon-a.soon)||(b.favorite-a.favorite));
+  return pool;
+}
+const findProductSafe=id=>pantryItems().find(p=>p.id===id);
+const SAFE_FALLBACK={flour:['oat flour','gluten-free oat flour','gluten-free flour blend','spelt flour'],leaven:['baking powder','gluten-free baking powder'],egg:['egg'],milk:['milk','lactose-free milk','oat milk'],fat:['butter','coconut oil'],sweet:['honey','maple syrup'],vanilla:['vanilla extract'],creamy:['greek yogurt','lactose-free greek yogurt','coconut yogurt'],oats:['rolled oats','gluten-free rolled oats'],cocoa:['cocoa powder'],nutbutter:['peanut butter','sunflower seed butter'],spice:['cinnamon']};
+/** ingredient for a slot: a pantry product if possible, else a SAFE generic that will show as "need" */
+function slotFill(pool,role,params,{amount,unit,prep='',avoidIds=[]}){
+  const c=(pool[role]||[]).find(x=>!avoidIds.includes(x.id));
+  if(c){const p=c.product;const lf=productAttr(p,'lactoseFree')&&params.required.includes('Lactose Free')&&!/lactose/.test(c.canonicalName)?'lactose-free ':'';
+    return {id:uid(),group:'',amount,unit,name:`${lf}${c.canonicalName}${prep?', '+prep:''}`,optional:false,pantryId:p.id,_role:role,_have:true,_flavor:p.flavor||''}}
+  for(const n of SAFE_FALLBACK[role]||[]){
+    if((params.required||[]).every(q=>checkIngredient(n,q).status!=='violates')&&!(params.avoid||[]).some(a=>matchTerm(a,n))){
+      const name=params.required.includes('Gluten Free')&&/oat/.test(n)&&!/gluten/.test(n)?'gluten-free '+n:params.required.includes('Lactose Free')&&/^(milk|greek yogurt)$/.test(n)?'lactose-free '+n:n;
+      return {id:uid(),group:'',amount,unit,name:`${name}${prep?', '+prep:''}`,optional:false,_role:role,_have:false}}
+  }
+  return null;
+}
+const hasRole=(pool,role)=>!!(pool[role]&&pool[role].length);
+const titleCase=s=>String(s).replace(/\b\w/g,c=>c.toUpperCase());
+const shortName=x=>titleCase(displayIngredient(splitQualifiers(canonicalIngredient(x.canonicalName||x.name||'').key).base));
+/* ---------- recipeTemplates: each asks for functions, never specific products ---------- */
+const RECIPE_TEMPLATES=[
+ {id:'muffins',label:'Muffins',tags:['sweet','dessert','baking','breakfast'],servings:10,temp:'180°C / 350°F',prep:'15 min',cook:'20–22 min',variants:p=>[...(p.grate||[]),...(p.mash||[]),...(p.chunk||[])].slice(0,4),
+  build(p,P,v){const isMash=(p.mash||[]).includes(v),isGrate=(p.grate||[]).includes(v)&&!isMash;
+   const I=[slotFill(p,'flour',P,{amount:'180',unit:'g'}),hasRole(p,'protein')?slotFill(p,'protein',P,{amount:'30',unit:'g'}):null,slotFill(p,'leaven',P,{amount:'2',unit:'tsp'}),hasRole(p,'spice')?slotFill(p,'spice',P,{amount:'1',unit:'tsp'}):null,hasRole(p,'salt')?slotFill(p,'salt',P,{amount:'1',unit:'pinch'}):null,
+    hasRole(p,'egg')?slotFill(p,'egg',P,{amount:'2',unit:''}):null,slotFill(p,'milk',P,{amount:'120',unit:'ml'}),slotFill(p,'fat',P,{amount:'50',unit:'g',prep:'melted'}),slotFill(p,'sweet',P,{amount:'3',unit:'tbsp'}),
+    {id:uid(),group:'',amount:isMash?'2':isGrate?'150':'120',unit:isMash?'':'g',name:`${v.canonicalName}${isMash?', mashed':isGrate?', finely grated':', chopped'}`,optional:false,pantryId:v.product.id,_role:'star',_have:true}];
+   if(!hasRole(p,'egg')&&!isMash)I.push(slotFill(p,'mash',P,{amount:'1',unit:'',prep:'mashed'})||slotFill(p,'egg',P,{amount:'2',unit:''}));
+   return {name:`${shortName(v)} ${(p.spice&&isGrate)?'Spiced ':''}Muffins`,ings:I,steps:[`Heat the oven to 180°C / 350°F and line a 10-hole muffin tin.`,`Whisk the dry ingredients together.`,`In another bowl whisk the wet ingredients${I.some(i=>i&&/egg/.test(i.name))?' with the eggs':''}, then stir in the ${shortName(v).toLowerCase()}.`,`Fold wet into dry until just combined — a few lumps are fine.`,`Divide between the cases and bake 20–22 minutes, until a toothpick comes out clean.`,`Cool 10 minutes in the tin.`]}}},
+ {id:'quickbread',label:'Quick bread',tags:['sweet','baking','breakfast','dessert'],servings:10,temp:'175°C / 350°F',prep:'15 min',cook:'45–55 min',variants:p=>[...(p.mash||[]),...(p.grate||[])].slice(0,2),
+  build(p,P,v){const isMash=(p.mash||[]).includes(v);
+   const I=[slotFill(p,'flour',P,{amount:'200',unit:'g'}),slotFill(p,'leaven',P,{amount:'2',unit:'tsp'}),hasRole(p,'spice')?slotFill(p,'spice',P,{amount:'1',unit:'tsp'}):null,hasRole(p,'salt')?slotFill(p,'salt',P,{amount:'1',unit:'pinch'}):null,
+    {id:uid(),group:'',amount:isMash?'3':'200',unit:isMash?'':'g',name:`${v.canonicalName}${isMash?', mashed':', finely grated'}`,optional:false,pantryId:v.product.id,_role:'star',_have:true},
+    hasRole(p,'egg')?slotFill(p,'egg',P,{amount:'2',unit:''}):slotFill(p,'creamy',P,{amount:'150',unit:'g'}),slotFill(p,'fat',P,{amount:'60',unit:'g',prep:'melted'}),slotFill(p,'sweet',P,{amount:'4',unit:'tbsp'}),slotFill(p,'milk',P,{amount:'60',unit:'ml'}),hasRole(p,'crunch')?{...slotFill(p,'crunch',P,{amount:'40',unit:'g',prep:'chopped'}),optional:true}:null];
+   return {name:`${shortName(v)} ${isMash?'Bread':'Loaf Cake'}`,ings:I,steps:['Heat the oven to 175°C / 350°F and line a loaf tin.','Mix the dry ingredients.',`Whisk the wet ingredients with the ${shortName(v).toLowerCase()}.`,'Stir wet into dry until just combined; fold in any nuts or seeds.','Bake 45–55 minutes until a skewer comes out clean. Cover with foil if it browns too fast.','Cool in the tin 15 minutes before slicing.']}}},
+ {id:'pancakes',label:'Pancakes',tags:['sweet','breakfast','quick'],servings:2,temp:'',prep:'5 min',cook:'10 min',variants:p=>[(p.mash||[])[0]||null],
+  build(p,P,v){const prot=hasRole(p,'protein');
+   const I=v?[{id:uid(),group:'',amount:'1',unit:'',name:`${v.canonicalName}, mashed`,optional:false,pantryId:v.product.id,_role:'star',_have:true}]:[];
+   I.push(hasRole(p,'flour')||!prot?slotFill(p,'flour',P,{amount:'60',unit:'g'}):null,prot?slotFill(p,'protein',P,{amount:'30',unit:'g'}):null,slotFill(p,'leaven',P,{amount:'1',unit:'tsp'}),hasRole(p,'egg')?slotFill(p,'egg',P,{amount:'1',unit:''}):null,slotFill(p,'milk',P,{amount:'120',unit:'ml'}),hasRole(p,'spice')?slotFill(p,'spice',P,{amount:'½',unit:'tsp'}):null,hasRole(p,'fat')?slotFill(p,'fat',P,{amount:'1',unit:'tsp',prep:'for the pan'}):null);
+   const lead=prot?'Protein ':'';
+   return {name:`${v?shortName(v)+' ':''}${lead}Pancakes`,ings:I,steps:['Whisk everything into a thick, smooth batter. Rest 5 minutes.','Heat a non-stick pan over medium heat and grease lightly.','Pour small rounds and cook until bubbles appear, about 2 minutes.','Flip and cook 1–2 minutes more.','Serve warm.']}}},
+ {id:'blondies',label:'Brownies & blondies',tags:['sweet','dessert','baking'],servings:9,temp:'180°C / 350°F',prep:'15 min',cook:'20–25 min',variants:p=>[(p.mash||[])[0]].filter(Boolean),
+  build(p,P,v){const cocoa=(p.cocoa||[])[0];
+   const I=[{id:uid(),group:'',amount:'2',unit:'',name:`${v.canonicalName}, mashed`,optional:false,pantryId:v.product.id,_role:'star',_have:true},slotFill(p,'flour',P,{amount:'90',unit:'g'}),cocoa?slotFill(p,'cocoa',P,{amount:'30',unit:'g'}):null,slotFill(p,'leaven',P,{amount:'½',unit:'tsp'}),
+    hasRole(p,'nutbutter')?slotFill(p,'nutbutter',P,{amount:'60',unit:'g'}):slotFill(p,'fat',P,{amount:'50',unit:'g',prep:'melted'}),slotFill(p,'sweet',P,{amount:'3',unit:'tbsp'}),hasRole(p,'egg')?slotFill(p,'egg',P,{amount:'1',unit:''}):slotFill(p,'milk',P,{amount:'3',unit:'tbsp'}),hasRole(p,'salt')?slotFill(p,'salt',P,{amount:'1',unit:'pinch'}):null,hasRole(p,'crunch')?{...slotFill(p,'crunch',P,{amount:'40',unit:'g',prep:'chopped'}),optional:true}:null];
+   const cn=cocoa?(/carob/.test(cocoa.canonicalName)?'Carob':'Chocolate'):'';
+   return {name:cocoa?`${shortName(v)} ${cn} Brownies`:`${shortName(v)} Blondies`,ings:I,steps:['Heat the oven to 180°C / 350°F and line a 20 cm square tin.','Mash and whisk the wet ingredients until smooth.','Stir in the dry ingredients until no dry flour remains.','Spread in the tin, scatter over any nuts or seeds.','Bake 20–25 minutes — the middle should still be slightly soft.','Cool completely before cutting into 9 squares.']}}},
+ {id:'cookies',label:'Oat cookies',tags:['sweet','dessert','baking','quick'],servings:12,temp:'180°C / 350°F',prep:'10 min',cook:'12–14 min',variants:p=>[(p.mash||[])[0]].filter(Boolean),
+  build(p,P,v){if(!hasRole(p,'oats')&&!hasRole(p,'flour'))return null;
+   const I=[{id:uid(),group:'',amount:'2',unit:'',name:`${v.canonicalName}, mashed`,optional:false,pantryId:v.product.id,_role:'star',_have:true},hasRole(p,'oats')?slotFill(p,'oats',P,{amount:'150',unit:'g'}):slotFill(p,'oats',P,{amount:'150',unit:'g'}),hasRole(p,'spice')?slotFill(p,'spice',P,{amount:'1',unit:'tsp'}):null,hasRole(p,'cocoa')?{...slotFill(p,'cocoa',P,{amount:'1',unit:'tbsp'}),optional:true}:null,hasRole(p,'crunch')?slotFill(p,'crunch',P,{amount:'40',unit:'g',prep:'chopped'}):null,hasRole(p,'salt')?slotFill(p,'salt',P,{amount:'1',unit:'pinch'}):null];
+   return {name:`${shortName(v)} Oat Cookies`,ings:I,steps:['Heat the oven to 180°C / 350°F and line a tray.','Mash, then stir everything together and rest 5 minutes so the oats soften.','Scoop 12 mounds onto the tray and flatten — they won\'t spread.','Bake 12–14 minutes until golden at the edges.','Cool on the tray; they firm up as they cool.']}}},
+ {id:'mugcake',label:'Protein mug cake',tags:['sweet','dessert','quick','under15'],servings:1,temp:'',prep:'3 min',cook:'1–2 min',variants:p=>[(p.mash||[])[0]].filter(Boolean),
+  build(p,P,v){if(!hasRole(p,'protein'))return null;
+   const I=[{id:uid(),group:'',amount:'½',unit:'',name:`${v.canonicalName}, mashed`,optional:false,pantryId:v.product.id,_role:'star',_have:true},slotFill(p,'protein',P,{amount:'30',unit:'g'}),slotFill(p,'leaven',P,{amount:'½',unit:'tsp'}),hasRole(p,'egg')?slotFill(p,'egg',P,{amount:'1',unit:''}):null,slotFill(p,'milk',P,{amount:'3',unit:'tbsp'}),hasRole(p,'cocoa')?slotFill(p,'cocoa',P,{amount:'1',unit:'tbsp'}):null];
+   return {name:`${shortName(v)}${hasRole(p,'cocoa')?' '+(/carob/.test(p.cocoa[0].canonicalName)?'Carob':'Cocoa'):''} Protein Mug Cake`,ings:I,steps:['Mash the fruit in a large microwave-safe mug.','Whisk in the remaining ingredients until smooth.','Microwave 60–90 seconds until risen and just set in the middle.','Rest 1 minute before eating — it is very hot.']}}},
+ {id:'mousse',label:'Mousse',tags:['sweet','dessert','pudding','quick','under15'],servings:2,temp:'',prep:'10 min',cook:'',
+  variants:p=>{const c=(p.cocoa||[])[0];if(!c)return [];const out=[];if((p.creamy||[]).length)out.push({...c,_base:'creamy'});if((p.veg||[]).some(x=>x.canonicalName==='cauliflower')&&(p.mash||[]).length)out.push({...c,_base:'cauli'});return out},
+  build(p,P,v){const base=v._base==='creamy'?(p.creamy||[])[0]:null, veg=v._base==='cauli'?(p.veg||[]).find(x=>x.canonicalName==='cauliflower'):null, mash=(p.mash||[])[0];
+   const I=[base?slotFill(p,'creamy',P,{amount:'300',unit:'g'}):{id:uid(),group:'',amount:'250',unit:'g',name:'cauliflower, florets',optional:false,pantryId:veg.product.id,_role:'base',_have:true},
+    mash?{id:uid(),group:'',amount:'1',unit:'',name:`${mash.canonicalName}, very ripe`,optional:false,pantryId:mash.product.id,_role:'sweet',_have:true}:slotFill(p,'sweet',P,{amount:'2',unit:'tbsp'}),
+    {id:uid(),group:'',amount:'2',unit:'tbsp',name:v.canonicalName,optional:false,pantryId:v.product.id,_role:'star',_have:true},veg?slotFill(p,'milk',P,{amount:'60',unit:'ml'}):null,hasRole(p,'vanilla')?slotFill(p,'vanilla',P,{amount:'½',unit:'tsp'}):null,hasRole(p,'crunch')?{...slotFill(p,'crunch',P,{amount:'1',unit:'tbsp',prep:'to sprinkle'}),optional:true}:null];
+   const fl=/carob/.test(v.canonicalName)?'Carob':'Chocolate';
+   return {name:veg?`Creamy ${fl} Cauliflower Pudding`:`${fl} ${titleCase(splitQualifiers(base.canonicalName).base)} Mousse`,ings:I,cook:veg?'12 min':'',steps:veg?['Steam or boil the cauliflower 10–12 minutes until very soft. Drain well and cool.','Blend with the banana, milk and carob until completely smooth — no flecks should remain.','Taste and add a little more carob or banana if you like.','Chill at least 1 hour; it thickens as it cools.','Serve topped with seeds or nuts.']:['Blend or whisk everything until smooth and glossy.','Taste and adjust sweetness.','Spoon into glasses and chill 15 minutes.','Top with something crunchy just before serving.']}}},
+ {id:'proteinpudding',label:'Protein pudding',tags:['sweet','dessert','pudding','quick','under15','breakfast'],servings:1,temp:'',prep:'5 min',cook:'',variants:p=>[(p.protein||[])[0]].filter(Boolean),
+  build(p,P,v){if(!hasRole(p,'creamy'))return null;const c=(p.cocoa||[])[0],fruit=(p.chunk||[])[0];
+   const I=[slotFill(p,'creamy',P,{amount:'200',unit:'g'}),{id:uid(),group:'',amount:'25',unit:'g',name:v.canonicalName,optional:false,pantryId:v.product.id,_role:'star',_have:true},slotFill(p,'milk',P,{amount:'3',unit:'tbsp'}),c?slotFill(p,'cocoa',P,{amount:'1',unit:'tbsp'}):null,fruit?{id:uid(),group:'',amount:fruit.canonicalName==='banana'?'½':'60',unit:fruit.canonicalName==='banana'?'':'g',name:`${fruit.canonicalName}, sliced`,optional:true,pantryId:fruit.product.id,_role:'topping',_have:true}:null];
+   return {name:`${c?(/carob/.test(c.canonicalName)?'Carob ':'Cocoa '):''}Protein Pudding`,ings:I,steps:['Whisk the protein powder with the milk into a smooth paste — this stops lumps.','Stir in the creamy base and flavouring until smooth.','Chill 10 minutes to thicken.','Top with the fruit.']}}},
+ {id:'ricepudding',label:'Rice pudding',tags:['sweet','dessert','pudding'],servings:3,temp:'',prep:'5 min',cook:'30–35 min',variants:p=>[(p.rice||[])[0]].filter(Boolean),
+  build(p,P,v){const fruit=(p.chunk||[]).find(x=>/pineapple|mango|apple|berr/.test(x.canonicalName));
+   const I=[{id:uid(),group:'',amount:'100',unit:'g',name:v.canonicalName,optional:false,pantryId:v.product.id,_role:'star',_have:true},slotFill(p,'milk',P,{amount:'700',unit:'ml'}),slotFill(p,'sweet',P,{amount:'2',unit:'tbsp'}),hasRole(p,'spice')?slotFill(p,'spice',P,{amount:'½',unit:'tsp'}):null,hasRole(p,'salt')?slotFill(p,'salt',P,{amount:'1',unit:'pinch'}):null,fruit?{id:uid(),group:'',amount:'150',unit:'g',name:`${fruit.canonicalName}, chopped`,optional:true,pantryId:fruit.product.id,_role:'topping',_have:true}:null];
+   return {name:fruit?`Creamy Rice Pudding with ${titleCase(fruit.canonicalName)}`:'Creamy Rice Pudding',ings:I,steps:['Put the rice, milk and salt in a heavy pan and bring slowly to a simmer.','Simmer very gently 30–35 minutes, stirring often, until the rice is soft and creamy. Add a splash more milk if it gets too thick.','Stir in the sweetener and spice.','Serve warm or chilled, topped with the fruit.'],note:/basmati|jasmine/.test(v.canonicalName)?'Basmati holds its shape more than pudding rice, so the result is a little less creamy.':''}}},
+ {id:'nicecream',label:'Nice cream',tags:['sweet','dessert','quick','under15'],servings:2,temp:'',prep:'5 min + freezing',cook:'',variants:p=>[(p.chunk||[]).find(x=>x.canonicalName==='banana')].filter(Boolean),
+  build(p,P,v){const extra=(p.chunk||[]).find(x=>x.id!==v.id&&/pineapple|mango|berr|strawberry/.test(x.canonicalName));const cocoa=!extra&&(p.cocoa||[])[0];
+   const I=[{id:uid(),group:'',amount:'2',unit:'',name:`${v.canonicalName}, sliced and frozen`,optional:false,pantryId:v.product.id,_role:'star',_have:true},extra?{id:uid(),group:'',amount:'100',unit:'g',name:`${extra.canonicalName}, frozen`,optional:false,pantryId:extra.product.id,_role:'flavour',_have:true}:null,cocoa?slotFill(p,'cocoa',P,{amount:'1',unit:'tbsp'}):null,slotFill(p,'milk',P,{amount:'2',unit:'tbsp'}),hasRole(p,'crunch')?{...slotFill(p,'crunch',P,{amount:'1',unit:'tbsp',prep:'to sprinkle'}),optional:true}:null];
+   return {name:extra?`${titleCase(v.canonicalName)} ${titleCase(extra.canonicalName)} Nice Cream`:cocoa?`${/carob/.test(cocoa.canonicalName)?'Carob':'Chocolate'} Banana Nice Cream`:'Banana Nice Cream',ings:I,steps:['Freeze the sliced fruit flat for at least 3 hours.','Blend with the milk, stopping to scrape down, until thick and creamy like soft-serve.','Eat straight away, or freeze 30 minutes for a firmer scoop.']}}},
+ {id:'smoothie',label:'Smoothie',tags:['sweet','smoothie','breakfast','quick','under15'],servings:1,temp:'',prep:'5 min',cook:'',variants:p=>(p.chunk||[]).slice(0,2),
+  build(p,P,v){const second=(p.chunk||[]).find(x=>x.id!==v.id);
+   const I=[{id:uid(),group:'',amount:v.canonicalName==='banana'?'1':'120',unit:v.canonicalName==='banana'?'':'g',name:v.canonicalName,optional:false,pantryId:v.product.id,_role:'star',_have:true},second?{id:uid(),group:'',amount:second.canonicalName==='banana'?'1':'80',unit:second.canonicalName==='banana'?'':'g',name:second.canonicalName,optional:false,pantryId:second.product.id,_role:'fruit',_have:true}:null,slotFill(p,'milk',P,{amount:'200',unit:'ml'}),hasRole(p,'creamy')?slotFill(p,'creamy',P,{amount:'100',unit:'g'}):hasRole(p,'protein')?slotFill(p,'protein',P,{amount:'20',unit:'g'}):null,hasRole(p,'seed')?{...slotFill(p,'seed',P,{amount:'1',unit:'tbsp'}),optional:true}:null];
+   return {name:`${titleCase(v.canonicalName)}${second?' '+titleCase(second.canonicalName):''} Smoothie`,ings:I,steps:['Add everything to a blender.','Blend until smooth, adding a splash more milk if it is too thick.','Serve straight away.']}}},
+ {id:'bowl',label:'Breakfast bowl',tags:['sweet','breakfast','quick','under15'],servings:1,temp:'',prep:'5 min',cook:'',variants:p=>(p.chunk||[]).slice(0,2),
+  build(p,P,v){if(!hasRole(p,'creamy')&&!hasRole(p,'oats'))return null;
+   const I=[hasRole(p,'creamy')?slotFill(p,'creamy',P,{amount:'200',unit:'g'}):slotFill(p,'oats',P,{amount:'50',unit:'g'}),!hasRole(p,'creamy')?slotFill(p,'milk',P,{amount:'150',unit:'ml'}):null,{id:uid(),group:'',amount:v.canonicalName==='banana'?'1':'100',unit:v.canonicalName==='banana'?'':'g',name:`${v.canonicalName}, sliced`,optional:false,pantryId:v.product.id,_role:'star',_have:true},hasRole(p,'crunch')?slotFill(p,'crunch',P,{amount:'1',unit:'tbsp'}):null,hasRole(p,'sweet')?{...slotFill(p,'sweet',P,{amount:'1',unit:'tsp'}),optional:true}:null,hasRole(p,'spice')?{...slotFill(p,'spice',P,{amount:'1',unit:'pinch'}),optional:true}:null];
+   return {name:`${titleCase(v.canonicalName)} ${hasRole(p,'creamy')?titleCase(splitQualifiers(p.creamy[0].canonicalName).base):'Porridge'} Bowl`,ings:I,steps:hasRole(p,'creamy')?['Spoon the base into a bowl.','Top with the fruit and something crunchy.','Drizzle with a little sweetener if you like.']:['Simmer the oats in the milk 4–5 minutes, stirring.','Top with the fruit and something crunchy.','Add a little sweetener or spice if you like.']}}},
+ {id:'ricecakes',label:'Rice-cake treats',tags:['sweet','dessert','quick','under15'],servings:2,temp:'',prep:'5 min',cook:'',variants:p=>[(p.ricecake||[])[0]].filter(Boolean),
+  build(p,P,v){const spread=(p.nutbutter||[])[0]?'nutbutter':(p.creamy||[])[0]?'creamy':null;const fruit=(p.chunk||[])[0];if(!spread&&!fruit)return null;
+   const I=[{id:uid(),group:'',amount:'4',unit:'',name:v.canonicalName,optional:false,pantryId:v.product.id,_role:'star',_have:true},spread?slotFill(p,spread,P,{amount:spread==='creamy'?'120':'2',unit:spread==='creamy'?'g':'tbsp'}):slotFill(p,'nutbutter',P,{amount:'2',unit:'tbsp'}),fruit?{id:uid(),group:'',amount:fruit.canonicalName==='banana'?'1':'100',unit:fruit.canonicalName==='banana'?'':'g',name:`${fruit.canonicalName}, sliced`,optional:false,pantryId:fruit.product.id,_role:'fruit',_have:true}:null,hasRole(p,'cocoa')?{...slotFill(p,'cocoa',P,{amount:'1',unit:'tsp',prep:'to dust'}),optional:true}:null,hasRole(p,'crunch')?{...slotFill(p,'crunch',P,{amount:'1',unit:'tbsp',prep:'chopped'}),optional:true}:null];
+   return {name:`${fruit?titleCase(fruit.canonicalName)+' ':''}Rice-Cake Stacks`,ings:I,steps:['Spread each rice cake with the spread.','Top with the fruit.','Finish with a dusting of carob or cocoa and chopped nuts or seeds.','Eat straight away so they stay crisp.'],note:/salt/.test(v.displayName.toLowerCase())?'Your rice cakes are salted — a nice sweet-salty contrast.':''}}},
+ {id:'bites',label:'Energy bites',tags:['sweet','dessert','quick','under15'],servings:12,temp:'',prep:'15 min',cook:'',variants:p=>[(p.protein||[])[0]||(p.oats||[])[0]].filter(Boolean),
+  build(p,P,v){const sticky=(p.date||[])[0]?'date':(p.nutbutter||[])[0]?'nutbutter':null;
+   const I=[{id:uid(),group:'',amount:'60',unit:'g',name:v.canonicalName,optional:false,pantryId:v.product.id,_role:'star',_have:true},sticky?slotFill(p,sticky,P,{amount:sticky==='date'?'8':'100',unit:sticky==='date'?'':'g',prep:sticky==='date'?'pitted':''}):slotFill(p,'nutbutter',P,{amount:'100',unit:'g'}),slotFill(p,'sweet',P,{amount:'2',unit:'tbsp'}),hasRole(p,'cocoa')?slotFill(p,'cocoa',P,{amount:'2',unit:'tbsp'}):null,hasRole(p,'crunch')?slotFill(p,'crunch',P,{amount:'40',unit:'g',prep:'finely chopped'}):null,hasRole(p,'salt')?slotFill(p,'salt',P,{amount:'1',unit:'pinch'}):null];
+   return {name:`${hasRole(p,'cocoa')?(/carob/.test(p.cocoa[0].canonicalName)?'Carob ':'Cocoa '):''}${/protein/.test(v.canonicalName)?'Protein ':'Oat '}Energy Bites`,ings:I,steps:['Mix everything into a firm, slightly sticky dough. Add a teaspoon of water if it is too dry.','Roll into 12 balls.','Chill 30 minutes to firm up.','Keep in the fridge for up to 5 days.']}}},
+ {id:'bakedfruit',label:'Baked fruit',tags:['sweet','dessert','baking'],servings:2,temp:'190°C / 375°F',prep:'10 min',cook:'20–25 min',variants:p=>[(p.chunk||[]).find(x=>/apple|pear|peach|pineapple/.test(x.canonicalName))].filter(Boolean),
+  build(p,P,v){const apple=/apple|pear/.test(v.canonicalName);
+   const I=[{id:uid(),group:'',amount:apple?'2':'300',unit:apple?'':'g',name:apple?`${v.canonicalName}, halved and cored`:`${v.canonicalName}, in chunks`,optional:false,pantryId:v.product.id,_role:'star',_have:true},slotFill(p,'fat',P,{amount:'15',unit:'g'}),slotFill(p,'sweet',P,{amount:'1',unit:'tbsp'}),hasRole(p,'spice')?slotFill(p,'spice',P,{amount:'1',unit:'tsp'}):null,hasRole(p,'crunch')?slotFill(p,'crunch',P,{amount:'2',unit:'tbsp',prep:'chopped'}):null,hasRole(p,'creamy')?{...slotFill(p,'creamy',P,{amount:'100',unit:'g',prep:'to serve'}),optional:true}:null];
+   return {name:`Baked ${titleCase(v.canonicalName)} with ${hasRole(p,'crunch')?titleCase(splitQualifiers(p.crunch[0].canonicalName).base):'Honey'}`,ings:I,steps:['Heat the oven to 190°C / 375°F.','Put the fruit in a small baking dish, cut side up.','Dot with the butter, drizzle with the sweetener and sprinkle with spice and nuts or seeds.','Bake 20–25 minutes until tender and bubbling.','Serve warm, with a spoonful of the creamy base if you like.']}}},
+ {id:'friedrice',label:'Veggie fried rice',tags:['meal'],servings:2,temp:'',prep:'10 min',cook:'10 min',variants:p=>[(p.rice||[])[0]].filter(Boolean),
+  build(p,P,v){const vegs=(p.veg||[]).slice(0,2);if(!vegs.length)return null;
+   const I=[{id:uid(),group:'',amount:'150',unit:'g',name:`${v.canonicalName}, cooked and cooled`,optional:false,pantryId:v.product.id,_role:'star',_have:true},...vegs.map(x=>({id:uid(),group:'',amount:'150',unit:'g',name:`${x.canonicalName}, finely chopped`,optional:false,pantryId:x.product.id,_role:'veg',_have:true})),hasRole(p,'egg')?slotFill(p,'egg',P,{amount:'2',unit:''}):null,slotFill(p,'fat',P,{amount:'1',unit:'tbsp'}),hasRole(p,'salt')?slotFill(p,'salt',P,{amount:'1',unit:'pinch'}):null,hasRole(p,'crunch')?{...slotFill(p,'crunch',P,{amount:'2',unit:'tbsp',prep:'to serve'}),optional:true}:null];
+   return {name:`${vegs.map(x=>titleCase(x.canonicalName)).join(' & ')} Fried Rice`,ings:I,steps:['Heat the fat in a large pan over high heat.','Stir-fry the vegetables 4–5 minutes until just tender.',`${I.some(i=>i&&/egg/.test(i.name))?'Push to one side, scramble the eggs, then mix through.':'Keep the pan hot.'}`,'Add the cold rice and stir-fry 3–4 minutes until piping hot. Season with salt.','Serve topped with nuts or seeds.']}}}
+];
+/** recipeValidator — basic culinary checks; anything that fails is not shown */
+function validateGenerated(r,tpl){
+  const ings=r.ingredients.filter(i=>!i.optional), M=recipeMetrics(ings), issues=[];
+  if(ings.length<2)issues.push('too few ingredients');
+  if(ings.some(i=>amountValue(i.amount)==null&&!/pinch|to taste/.test(i.unit+i.amount)))issues.push('missing amounts');
+  if(['muffins','quickbread','blondies'].includes(tpl.id)){
+    if(M.flour<70)issues.push('not enough flour for structure');
+    if(!M.leavTsp&&tpl.id!=='blondies')issues.push('no leavening');
+    if(!(M.eggs||ings.some(i=>/banana|applesauce|pumpkin|yogh?urt|skyr|flax|chia|nut butter|peanut butter/.test(i.name))))issues.push('no binder');
+    const h=M.hydration;if(h!=null&&(h<0.5||h>2.2))issues.push('batter liquid out of range');
+    if(!/1[5-9]0|2[0-2]0/.test(r.tempText))issues.push('oven temperature');
+  }
+  if(tpl.id==='pancakes'&&!(M.flour||ings.some(i=>/protein/.test(i.name))))issues.push('no dry base');
+  if(tpl.id==='pancakes'&&!(M.liquid||M.eggs))issues.push('no liquid');
+  if(tpl.id==='mugcake'&&!ings.some(i=>/protein/.test(i.name)))issues.push('no protein base');
+  if(r.instructions.length<3)issues.push('incomplete method');
+  return {ok:!issues.length,issues};
+}
+/** recipeGenerator — creates Smart Treat recipes from the current pantry pool */
+function generatePantryRecipes(params){
+  const pool=pantryRoles(params), out=[];
+  for(const tpl of RECIPE_TEMPLATES){
+    const vars=(tpl.variants(pool)||[]).filter(x=>x!==undefined).slice(0,4);
+    for(const v of vars.length?vars:[]){
+      let b; try{b=tpl.build(pool,params,v)}catch(e){b=null} if(!b)continue;
+      const flav=b.ings.filter(i=>i&&i._flavor).map(i=>`${titleCase(splitQualifiers(canonicalIngredient(i.name).key).base)} in your kitchen is ${i._flavor} flavoured, which will come through.`);
+      const ings=b.ings.filter(Boolean).map(({_role,_have,_flavor,...i})=>i);
+      const r={id:`st_${tpl.id}_${canonicalIngredient(b.name).key.replace(/\W+/g,'_')}`,sourceType:'generated',name:b.name,description:'',image:null,category:tpl.label,servings:tpl.servings,
+        ingredients:ings,instructions:b.steps,prepTime:tpl.prep,cookTime:b.cook!==undefined?b.cook:tpl.cook,tempText:tpl.temp,totalMinutes:minutesOf(tpl.prep,b.cook!==undefined?b.cook:tpl.cook),tags:[...tpl.tags],template:tpl.id,note:[b.note,...flav].filter(Boolean).join(' '),
+        source:{provider:'Smart Treats',name:'Created from your pantry',url:null,externalId:null,attribution:'Created by Smart Treats from what you have at home',retrievedAt:Date.now()}};
+      if(tpl.tags.includes('quick')&&r.totalMinutes!=null&&r.totalMinutes>20)r.tags=r.tags.filter(t=>t!=='quick');
+      const val=validateGenerated(r,tpl); if(!val.ok)continue;
+      r.confidence=ings.filter(i=>!i.optional&&!i.pantryId).length===0?'high':'medium';
+      out.push(r);
+    }
+  }
+  return out;
+}
+/* ---------- substitutionEngine (discovery): only swaps that keep the recipe working ---------- */
+const DISCOVERY_SUBS={'cocoa powder':['carob powder'],'cacao powder':['carob powder','cocoa powder'],'oil':['butter','coconut oil','rapeseed oil'],'vegetable oil':['butter','coconut oil','rapeseed oil'],'sunflower oil':['rapeseed oil','butter'],'rapeseed oil':['sunflower oil','butter'],'butter':['coconut oil','plant butter'],
+  'yogurt':['skyr','greek yogurt'],'greek yogurt':['skyr','quark'],'natural yogurt':['skyr','greek yogurt'],'walnut':['pecan','pumpkin seed','sunflower seed','peanut'],'pecan':['walnut','pumpkin seed','peanut'],'pecan nut':['walnut','pumpkin seed','peanut'],'almond':['peanut','pumpkin seed','sunflower seed'],'hazelnut':['peanut','pumpkin seed'],
+  'flour':['gluten-free flour','spelt flour','oat flour'],'plain flour':['gluten-free flour','spelt flour','oat flour'],'all-purpose flour':['gluten-free flour','spelt flour','oat flour'],'self-raising flour':[],'honey':['maple syrup','agave syrup'],'maple syrup':['honey','agave syrup'],'golden syrup':['honey','maple syrup'],'sugar':['coconut sugar','brown sugar'],'caster sugar':['sugar','coconut sugar'],'brown sugar':['coconut sugar','sugar']};
+function findDiscoverySub(name,reqs){
+  const k=splitQualifiers(canonicalIngredient(name).key).base, opts=DISCOVERY_SUBS[k]||[];
+  for(const o of opts){const m=matchRecipeIngredientToPantry({name:o},{reqs});if(m&&(m.level==='exact'||m.level==='compatible'))return {product:m.product,label:`Using ${m.product.productName.toLowerCase()} instead of ${k}`}}
+  return null;
+}
+
 const MOODS=[['sweet','🍰','Something sweet'],['quick','🍪','Quick treat'],['dessert','🍫','Dessert'],['breakfast','🥞','Breakfast'],['meal','🥗','Meal'],['smoothie','🥤','Smoothie'],['pudding','🍮','Pudding'],['baking','🧁','Baking'],['protein','⚡','High protein'],['fiber','🥕','Higher fiber'],['lowcal','🪶','Lower calorie'],['under15','⏱','Under 15 minutes'],['five','🥣','5 ingredients or less'],['surprise','🎲','Surprise me']];
 const MOOD_KIND={sweet:'type',dessert:'type',breakfast:'type',meal:'type',smoothie:'type',pudding:'type',baking:'type',quick:'conv',under15:'conv',five:'conv',protein:'goal',fiber:'goal',lowcal:'goal',surprise:'fun'};
 /** normalizePantryIngredients() — one record per product, aliases only from confirmed data */
@@ -2169,10 +2374,10 @@ function matchRecipeToPantry(ings,reqs=[]){
     const m=matchRecipeIngredientToPantry(i,{reqs});
     if(m&&(m.level==='exact'||m.level==='compatible'))have.push({...i,via:m.product.productName,product:m.product,level:m.level,note:m.note});
     else if(activeProducts().some(p=>p.staple&&productKeys(p).includes(c.key)))have.push({...i,via:'staple'});
-    else missing.push({...i,possible:m&&m.level==='possible'?m.product.productName:null});
+    else{const sub=findDiscoverySub(i.name,reqs);if(sub)have.push({...i,via:sub.product.productName,product:sub.product,level:'substitute',note:sub.label,sub:sub.label});else missing.push({...i,possible:m&&m.level==='possible'?m.product.productName:null})}
   }
   const req=have.length+missing.length;
-  return {have,missing,optional,requiredIngredientCount:req,availableIngredientCount:have.length,missingIngredientCount:missing.length,pantryMatchPercent:req?have.length/req*100:0};
+  return {have,missing,optional,substitutions:have.filter(h=>h.sub).map(h=>h.sub),requiredIngredientCount:req,availableIngredientCount:have.length,missingIngredientCount:missing.length,pantryMatchPercent:req?have.length/req*100:0};
 }
 const getAvailableIngredients=(ings,reqs)=>matchRecipeToPantry(ings,reqs).have;
 const getMissingIngredients=(ings,reqs)=>matchRecipeToPantry(ings,reqs).missing;
@@ -2185,12 +2390,12 @@ function filterForRequirements(ings,reqs,avoid){
 function recipeTags(x){
   const n=`${x.name} ${x.category||''} ${(x.tags||[]).join(' ')}`.toLowerCase(), ingN=x.ingredients.map(i=>i.name.toLowerCase()).join(' ');
   const t=new Set(x.tags||[]);
-  if(/dessert|cake|cookie|brownie|muffin|pudding|cheesecake|truffle|treat|tart|pie|crumble|ice cream|mousse|sweet/.test(n))t.add('dessert');
+  if(/dessert|\bcake|cookie|brownie|muffin|pudding|cheesecake|truffle|treat|tart|pie|crumble|ice cream|mousse|sweet/.test(n))t.add('dessert');
   if(t.has('dessert')||/sugar|honey|syrup|chocolate|banana|date/.test(ingN)&&!/meal|savou?ry|chicken|beef|fish|pork|lamb/.test(n))t.add('sweet');
   if(/breakfast|pancake|porridge|oat|granola|waffle|overnight/.test(n))t.add('breakfast');
   if(/smoothie|shake/.test(n))t.add('smoothie');
   if(/pudding|mousse|panna cotta|custard|chia/.test(n))t.add('pudding');
-  if(/\bbake\b|oven|°c|°f/.test((x.instructions||[]).join(' ').toLowerCase())||/cake|muffin|cookie|brownie|bread|loaf|tart|pie/.test(n))t.add('baking');
+  if(/\bbake\b|oven|°c|°f/.test((x.instructions||[]).join(' ').toLowerCase())||/(?<!rice[- ])\bcake|muffin|cookie|brownie|bread|loaf|tart|\bpie\b/.test(n))t.add('baking');
   if(/main|meal|chicken|beef|fish|pork|lamb|pasta|salad|soup|curry|stew|vegetarian|side|starter|seafood|vegan/.test(n)&&!t.has('dessert'))t.add('meal');
   const mins=x.totalMinutes;
   if(mins!=null&&mins<=15){t.add('under15');t.add('quick')}
@@ -2235,7 +2440,7 @@ const ClaudeRecipeIdeaProvider={id:'claude',name:'Recipe ideas by Claude',
   async available(){return ClaudeEngine.available()},
   async searchRecipes(params,{signal,onText}={}){
     const s=await getSample(); if(!s)throw {code:'unavailable'};
-    const prompt=`Create 4 original recipe ideas a home cook could make mostly from their pantry. These are your own ideas, not copied from websites.
+    const prompt=`Create 6 original, tested-style recipe ideas a home cook could make mostly from their pantry. Each must physically work: enough liquid, binder and leavening, realistic temperatures and times, complete method. These are your own ideas, not copied from websites.
 Pantry (what they have): ${params.pantryDetail.join('; ')}
 In the mood for: ${params.moodLabels.join(', ')||'anything'}
 Especially use: ${params.priorityIngredients.join(', ')||'no preference'}
@@ -2262,34 +2467,53 @@ const MockRecipeDiscoveryProvider={id:'mock',name:'Sample recipes (mock data)',
   }};
 /* ---------- ranking ---------- */
 const RecipeRankingService={
+  weights:{pantry:0.40,profile:0.20,mood:0.15,missing:0.10,soon:0.10,quality:0.05},
   rank(results,params){
-    const W=DISCOVERY_CONFIG.weights;
-    const scored=results.map(x=>{
+    const W=this.weights, soonIds=new Set(activeProducts().filter(p=>p.useSoon||p.opened||(p.bestBefore&&new Date(p.bestBefore).getTime()-Date.now()<5*864e5)).map(p=>p.id));
+    const caution=DB.ingredients.filter(t=>t.status==='caution').map(t=>t.name), dislike=DB.ingredients.filter(t=>t.pref==='dislike').map(t=>t.name), love=DB.ingredients.filter(t=>t.pref==='love').map(t=>t.name);
+    const typeM=params.mood.filter(k=>MOOD_KIND[k]==='type');
+    return results.map(x=>{
       const m=matchRecipeToPantry(x.ingredients,params.required);
-      const req=filterForRequirements(x.ingredients,params.required,params.avoid);
+      const req=filterForRequirements(x.ingredients.filter(i=>!i.optional),params.required,params.avoid);
       const tags=recipeTags(x), nut=resultNutrition(x);
+      const names=x.ingredients.map(i=>i.name);
+      const hit=list=>list.filter(t=>names.some(n=>matchTerm(t,n))).length;
+      let profile=params.required.length?(req.notMet.length?0:req.unsure.length?0.5:1):1;
+      profile=Math.max(0,profile-0.25*hit(caution)-0.2*hit(dislike))+Math.min(0.2,0.1*hit(love));
+      const moodScore=typeM.length?typeM.filter(k=>tags.has(k)).length/typeM.length:0.5;
       const goalHits=[];
       if(params.mood.includes('protein')&&nut&&nut.protein>=DB.preferences.thresholds.protein)goalHits.push('High protein');
       if(params.mood.includes('fiber')&&nut&&nut.fiber>=DB.preferences.thresholds.fiber)goalHits.push('Higher fiber');
       if(params.mood.includes('lowcal')&&nut&&nut.kcal<=200)goalHits.push('Lower calorie');
-      const goalWanted=params.mood.filter(k=>MOOD_KIND[k]==='goal').length;
+      const soonUsed=m.have.filter(i=>i.product&&soonIds.has(i.product.id));
       const prio=params.priorityIngredients.filter(p=>m.have.concat(m.missing).some(i=>canonicalIngredient(i.name).options.some(o=>o===p||o.includes(p))));
-      const conv=(x.totalMinutes!=null&&x.totalMinutes<=20?0.5:0)+(m.requiredIngredientCount<=5?0.5:0);
-      const reqScore=params.required.length?(req.notMet.length?0:req.unsure.length?0.6:1):1;
-      const score=W.pantry*(m.pantryMatchPercent/100)+W.requirements*reqScore+W.goals*(goalWanted?goalHits.length/goalWanted:0.5)+W.priority*(params.priorityIngredients.length?prio.length/params.priorityIngredients.length:0)+W.convenience*conv+(x.favorite?0.03:0)+(x.perfect?0.03:0);
+      const quality=x.sourceType==='saved'?1:x.sourceType==='generated'?(x.confidence==='high'?0.9:0.7):x.source&&x.source.provider==='Claude'?0.7:0.75;
+      const score=W.pantry*(m.pantryMatchPercent/100)+W.profile*Math.min(1,profile)+W.mood*moodScore+W.missing*Math.max(0,1-m.missingIngredientCount/3)+W.soon*(soonUsed.length?Math.min(1,soonUsed.length/2):0)+W.quality*quality+(prio.length?0.06*prio.length:0)+(goalHits.length?0.03*goalHits.length:0)+(x.favorite?0.02:0);
       const reasons=[];
       if(m.requiredIngredientCount&&!m.missingIngredientCount)reasons.push(`You already have all ${m.requiredIngredientCount} ingredients.`);
       else if(m.pantryMatchPercent>=70)reasons.push(`Great match — you already have ${m.availableIngredientCount} of the ${m.requiredIngredientCount} ingredients.`);
       if(m.missingIngredientCount===1)reasons.push('Only one ingredient needs to be bought.');
       prio.forEach(p=>reasons.push(`Uses the ${p} you selected.`));
+      soonUsed.forEach(i=>reasons.push(`Uses your ${i.product.productName.toLowerCase()}, which you want to use soon.`));
       goalHits.forEach(g=>reasons.push(`Matches your ${g.toLowerCase()} goal (estimated).`));
       const fridge=m.have.filter(i=>i.product&&i.product.location==='fridge').length;if(fridge>=2)reasons.push(`Uses ${fridge} ingredients from your fridge.`);
       if(x.sourceType==='saved'&&x.perfect)reasons.push('This is one of your Perfect Versions.');
-      return {...x,...m,ingredientsHave:m.have,ingredientsMissing:m.missing,tagsSet:tags,nutrition:nut,matchedRequirements:req.met,requirementsNotMet:req.notMet,requirementsUnsure:req.unsure,matchedGoals:goalHits,priorityHits:prio,recommendationReasons:reasons,score};
-    });
-    return params.mood.includes('surprise')?scored.map(x=>({...x,score:x.score+Math.random()*0.15})).sort((a,b)=>b.score-a.score):scored.sort((a,b)=>b.score-a.score);
+      return {...x,...m,ingredientsHave:m.have,ingredientsMissing:m.missing,tagsSet:tags,nutrition:nut,matchedRequirements:req.met,requirementsNotMet:req.notMet,requirementsUnsure:req.unsure,matchedGoals:goalHits,priorityHits:prio,soonHits:soonUsed.length,recommendationReasons:reasons,score:params.mood.includes('surprise')?score+Math.random()*0.15:score};
+    }).sort((a,b)=>tier(b)-tier(a)||b.score-a.score);
+    function tier(x){const p=x.pantryMatchPercent;return p>=99.9?4:p>=90?3:p>=75?2:x.missingIngredientCount<=2?1:0}
   }
 };
+/** recipeDeduplicator — same name or nearly the same ingredient list counts as one recipe */
+function dedupeRecipes(list){
+  const out=[],sig=x=>new Set(x.ingredients.filter(i=>!i.optional).map(i=>splitQualifiers(canonicalIngredient(i.name).key).base));
+  const pri={saved:0,external:1,generated:2};
+  for(const x of [...list].sort((a,b)=>(pri[a.sourceType]??3)-(pri[b.sourceType]??3))){
+    const nm=canonicalIngredient(x.name.replace(/^my\s+/i,'')).key, s1=sig(x);
+    if(out.some(y=>canonicalIngredient(y.name.replace(/^my\s+/i,'')).key===nm||(x.sourceType==='generated'&&y.sourceType==='generated'&&x.template===y.template&&(()=>{const s2=sig(y);return s2.size===s1.size&&[...s1].every(k=>s2.has(k))})())||(x.sourceType!==y.sourceType)&&(()=>{const s2=sig(y);const inter=[...s1].filter(k=>s2.has(k)).length;return inter/Math.max(1,new Set([...s1,...s2]).size)>0.8})()))continue;
+    out.push(x);
+  }
+  return out;
+}
 /* ---------- discovery service ---------- */
 const RecipeDiscoveryService={
   buildRequest(sel){
@@ -2309,40 +2533,41 @@ const RecipeDiscoveryService={
     if(await ClaudeRecipeIdeaProvider.available()){try{out.results.push(...await ClaudeRecipeIdeaProvider.searchRecipes(p,opts))}catch(e){out.notes.push({kind:'claude',text:"Claude couldn't suggest ideas right now."})}}
     return out;
   },
-  /** full search: saved + external, filtered and ranked against the CURRENT pantry */
+  /** full search: saved → web → AI → pantry-generated Smart Treats; deduplicated, filtered and ranked against the CURRENT pantry */
   async search(sel,opts={}){
     const p=this.buildRequest(sel);
     if(!p.pantryIngredients.length)return {empty:'pantry',params:p,results:[],notes:[]};
     const saved=await this.searchSavedRecipes(p);
     const ext=await this.searchExternalRecipes(p,opts);
-    let ranked=RecipeRankingService.rank([...saved,...ext.results],p);
-    // filters: type moods (OR), known time limit, 5-ingredient limit, avoid list, missing limit
+    const generated=generatePantryRecipes(p);
+    let ranked=RecipeRankingService.rank(dedupeRecipes([...saved,...ext.results,...generated]),p);
     const typeM=p.mood.filter(k=>MOOD_KIND[k]==='type');
-    if(typeM.length)ranked=ranked.filter(x=>typeM.some(k=>x.tagsSet.has(k)));
-    if(p.optionalTimeLimit)ranked=ranked.filter(x=>x.totalMinutes==null||x.totalMinutes<=p.optionalTimeLimit);
+    if(typeM.length){const all=ranked.filter(x=>typeM.every(k=>x.tagsSet.has(k))&&x.missingIngredientCount<=p.maxMissingIngredients);ranked=typeM.length>1&&all.length>=3?ranked.filter(x=>typeM.every(k=>x.tagsSet.has(k))):ranked.filter(x=>typeM.some(k=>x.tagsSet.has(k)))}
+    if(p.optionalTimeLimit)ranked=ranked.filter(x=>x.totalMinutes==null?x.sourceType!=='generated':x.totalMinutes<=p.optionalTimeLimit);
     if(p.mood.includes('five'))ranked=ranked.filter(x=>x.requiredIngredientCount<=5);
+    if(p.mood.includes('quick'))ranked=ranked.filter(x=>x.tagsSet.has('quick')||x.totalMinutes!=null&&x.totalMinutes<=25);
+    // hard restrictions: Avoid list and MUST HAVE requirements exclude a recipe outright
     if(p.avoid.length)ranked=ranked.filter(x=>!x.ingredients.some(i=>p.avoid.some(a=>matchTerm(a,i.name))));
-    ranked=ranked.filter(x=>x.sourceType==='saved'?!x.requirementsNotMet.length:true); // a saved version that breaks a must-have isn't offered
+    ranked=ranked.filter(x=>!x.requirementsNotMet.length);
     const within=ranked.filter(x=>x.missingIngredientCount<=p.maxMissingIngredients);
-    return {params:p,results:within,nearMisses:within.length?[]:ranked.slice(0,3),notes:ext.notes};
+    return {params:p,results:within.slice(0,24),nearMisses:within.length?[]:ranked.slice(0,3),notes:ext.notes,counts:{saved:saved.length,web:ext.results.filter(x=>x.source.provider!=='Claude'&&x.source.provider!=='mock').length,ai:ext.results.filter(x=>x.source.provider==='Claude').length,generated:generated.length}};
   }
 };
 /** group results so each recipe appears once */
 function groupDiscovery(results){
   const used=new Set(),take=(f)=>results.filter(x=>!used.has(x.id)&&f(x)).map(x=>(used.add(x.id),x));
   return [
-    ['best','Best matches','Almost everything is already in your kitchen.',take(x=>x.pantryMatchPercent>=80&&x.missingIngredientCount<=1).slice(0,4)],
-    ['first','Use these first','Recipes with the ingredients you picked.',take(x=>x.priorityHits.length>0)],
-    ['one',"You're one ingredient away",'',take(x=>x.missingIngredientCount===1)],
-    ['shop','Worth a small shop','Missing 2–3 ingredients.',take(x=>x.missingIngredientCount>=2&&x.missingIngredientCount<=3)],
-    ['book','From your cookbook','',take(x=>x.sourceType==='saved')],
-    ['disc','Discovered for you','',take(x=>x.sourceType==='external')]
+    ['perfect','Perfect pantry match','Everything required is already in your kitchen.',take(x=>x.missingIngredientCount===0)],
+    ['almost','Almost there','Only 1–2 ingredients missing.',take(x=>x.missingIngredientCount<=2)],
+    ['smart','More Smart Treats','Created from your pantry.',take(x=>x.sourceType==='generated')],
+    ['web','From the web','',take(x=>x.sourceType==='external'&&x.source.provider!=='Claude')],
+    ['more','More ideas','',take(()=>true)]
   ].filter(g=>g[3].length);
 }
 /** adaptDiscoveredRecipe — hands a discovered recipe to the existing Make It Mine flow (source kept separately) */
 function discoveredToImport(x){
-  return {name:x.name,description:x.description||'',servings:x.servings||null,servingsNote:x.servings?'':"Servings weren't included in the recipe.",prepTime:x.prepTime||'',cookTime:x.cookTime||'',tempText:'',
-    ingredients:x.ingredients.map(i=>({id:uid(),group:i.group||'',amount:i.amount||'',unit:i.unit||'',name:i.name,optional:!!i.optional})),instructions:[...(x.instructions||[])],storage:'',freezer:null,engine:'rules',confidence:{}};
+  return {name:x.name,description:x.description||'',servings:x.servings||null,servingsNote:x.servings?'':"Servings weren't included in the recipe.",prepTime:x.prepTime||'',cookTime:x.cookTime||'',tempText:x.tempText||'',
+    ingredients:x.ingredients.map(i=>({id:uid(),group:i.group||'',amount:i.amount||'',unit:i.unit||'',name:i.name,optional:!!i.optional,...(i.pantryId?{pantryId:i.pantryId}:{})})),instructions:[...(x.instructions||[])],storage:'',freezer:null,engine:'rules',confidence:{}};
 }
 
 /* =====================================================================
@@ -3276,7 +3501,7 @@ const locChip=l=>l?`<span class="loc loc-${l}">${({fridge:'Fridge',pantry:'Pantr
 function productCard(p){
   const q=productQty(p), amt=q?fmtQtyObj(q)+' left':p.amount?`${p.amount} ${p.unit||''} pack`.trim():'';
   return `<div class="pcard ${p.status}"><button class="pthumb" data-act="p-open" data-v="${p.id}" aria-label="Edit ${esc(p.productName)}">${p.photo?`<img src="${p.photo}" alt="">`:`<span>${CAT_EMOJI[p.category]||'🛍️'}</span>`}</button>
-  <button class="pinfo" data-act="p-open" data-v="${p.id}"><b>${esc(p.productName)}</b>${p.brand?`<small class="brand">${esc(p.brand)}</small>`:''}<span class="pmeta">${locChip(p.location)}${p.staple?'<span class="loc loc-staple">Staple</span>':''}${amt?`<small>${esc(amt)}</small>`:''}</span></button>
+  <button class="pinfo" data-act="p-open" data-v="${p.id}"><b>${esc(p.productName)}</b>${p.brand?`<small class="brand">${esc(p.brand)}</small>`:''}<span class="pmeta">${locChip(p.location)}${p.staple?'<span class="loc loc-staple">Staple</span>':''}${p.useSoon?'<span class="loc loc-soon">Use soon</span>':''}${amt?`<small>${esc(amt)}</small>`:''}</span></button>
   <div class="pside"><button class="heart-s ${p.favorite?'on':''}" data-act="p-fav" data-v="${p.id}" aria-label="Favourite">${I.heart}</button><button class="spill st-${p.status}" data-act="p-status" data-v="${p.id}">${PANTRY_STATUS[p.status]}</button></div></div>`;
 }
 function pantrySearchHTML(){
@@ -3349,7 +3574,8 @@ function screenProduct(){
   <div class="grid2">${f('packedIn','Packed in','e.g. own juice')}${f('flavor','Flavour','e.g. strawberry & lime')}</div>
   <div class="attrs">${PANTRY_ATTRS.map(([k,l])=>{const v=d.attributes[k];return `<button class="attr a-${v===true?'yes':v===false?'no':'unk'}" data-act="pf-attr" data-v="${k}"><b>${l}</b><small>${tri(v)}</small></button>`}).join('')}</div>
   <p class="sub" style="margin-top:8px">Tap to cycle Yes → No → Unknown.</p></section>
-  <button class="usepantry ${d.staple?'on':''}" style="margin-top:18px" data-act="pf-staple"><span class="pcheck ${d.staple?'on':''}">${d.staple?'✓':''}</span><span><b>Kitchen staple</b><small>Always count this as available when finding recipes.</small></span></button>
+  <button class="usepantry ${d.useSoon?'on':''}" style="margin-top:18px" data-act="pf-soon"><span class="pcheck ${d.useSoon?'on':''}">${d.useSoon?'✓':''}</span><span><b>Use soon</b><small>Recipes using this move up in “What can I make?”.</small></span></button>
+  <button class="usepantry ${d.staple?'on':''}" style="margin-top:10px" data-act="pf-staple"><span class="pcheck ${d.staple?'on':''}">${d.staple?'✓':''}</span><span><b>Kitchen staple</b><small>Always count this as available when finding recipes.</small></span></button>
   <section><h2>Freshness</h2>
   <button class="chip ${d.opened?'on':''}" data-act="pf-opened">${d.opened?I.check:''} Opened</button>
   <div class="grid2">${d.opened?f('dateOpened','Opened on','','type="date"'):''}${f('bestBefore','Best before','','type="date"')}</div></section>
@@ -3430,7 +3656,7 @@ function discState(){
   const P=DB.preferences, gmap={'Higher Protein':'protein','Higher Fiber':'fiber','Lower Calories':'lowcal'};
   return ui.disc={mood:(P.goals||[]).map(g=>gmap[g]).filter(Boolean),priority:[],soon:false,required:[...(P.bodyReqs||[])],avoid:DB.ingredients.filter(t=>t.status==='avoid').map(t=>t.name),maxMissing:2,onlyWhatIHave:false,editRules:false,state:'idle',res:null};
 }
-function soonProducts(){const now=Date.now(),wk=5*864e5;return activeProducts().filter(p=>p.opened||(p.bestBefore&&new Date(p.bestBefore).getTime()-now<wk))}
+function soonProducts(){const now=Date.now(),wk=5*864e5;return activeProducts().filter(p=>p.useSoon||p.opened||(p.bestBefore&&new Date(p.bestBefore).getTime()-now<wk))}
 function screenDiscover(){
   const D=discState(), pantry=normalizePantryIngredients(), P=DB.preferences;
   const bases=[];const seen=new Set();pantry.forEach(p=>{if(!seen.has(p.canonicalName)){seen.add(p.canonicalName);bases.push(p)}});
@@ -3444,7 +3670,7 @@ function screenDiscover(){
     <div class="moods">${MOODS.map(([k,e,l])=>`<button class="mood ${D.mood.includes(k)?'on':''}" data-act="d-mood" data-v="${k}" aria-pressed="${D.mood.includes(k)}"><span>${e}</span>${l}</button>`).join('')}</div></section>
   ${bases.length?`<section><h2>Anything you especially want to use?</h2><p class="sub">Optional — everything marked Have is already included.</p>
     <div class="chips" style="margin-top:12px">${bases.map(p=>`<button class="chip ${D.priority.includes(p.canonicalName)?'on':''}" data-act="d-prio" data-v="${esc(p.canonicalName)}">${D.priority.includes(p.canonicalName)?I.check:''}${esc(displayIngredient(p.canonicalName))}</button>`).join('')}</div>
-    <button class="usepantry ${D.soon?'on':''}" style="margin-top:12px" data-act="d-soon"><span class="pcheck ${D.soon?'on':''}">${D.soon?'✓':''}</span><span><b>Use something soon</b><small>${soon.length?`Prioritise what's opened or near its best-before: ${esc(soon.map(p=>p.productName).join(', '))}.`:'Mark products as opened or add a best-before date in My Pantry, and I’ll prioritise them.'}</small></span></button></section>`:''}
+    <button class="usepantry ${D.soon?'on':''}" style="margin-top:12px" data-act="d-soon"><span class="pcheck ${D.soon?'on':''}">${D.soon?'✓':''}</span><span><b>Use something soon</b><small>${soon.length?`Prioritise what's opened or near its best-before: ${esc(soon.map(p=>p.productName).join(', '))}.`:'Mark products “Use soon” (or opened / best-before) in My Pantry, and I’ll prioritise them.'}</small></span></button></section>`:''}
   <section class="card"><div class="sec-head" style="margin-bottom:6px"><h2>Using your food preferences</h2><button class="linkbtn" data-act="d-editrules">${D.editRules?'Done':'Edit for this search'}</button></div>
     ${D.editRules?`<div class="chips">${[...new Set([...BODY_REQS,...(P.customReqs||[]).filter(c=>!GOALS.includes(c)),...D.required])].map(q=>`<button class="chip req ${D.required.includes(q)?'on':''}" data-act="d-req" data-v="${esc(q)}">${D.required.includes(q)?I.check:''}${esc(q)}</button>`).join('')}</div><p class="sub" style="margin-top:8px">Changes here only apply to this search — My Food Rules stay as they are.</p>`
     :`<div class="badges">${D.required.length?D.required.map(q=>`<span class="tier must" style="font-size:12px">${esc(q)}</span>`).join(''):'<span class="sub">No must-haves saved — that’s fine.</span>'}</div>`}
@@ -3454,30 +3680,33 @@ function screenDiscover(){
     <button class="usepantry ${D.onlyWhatIHave?'on':''}" style="margin-top:12px" data-act="d-only"><span class="pcheck ${D.onlyWhatIHave?'on':''}">${D.onlyWhatIHave?'✓':''}</span><span><b>Use only what I have</b><small>Only recipes I can make right now. Products you've marked as kitchen staples count as available.</small></span></button></section>
   <div class="footbar"><div class="footbar-in"><button class="btn btn-primary btn-xl" data-act="d-find" ${pantry.length?'':'disabled'}>${I.spark} Find recipes</button></div></div>`;
 }
-const srcLabel=x=>x.sourceType==='saved'?'From your cookbook':x.source.provider==='Claude'?'Recipe idea by Claude':x.source.provider==='mock'?'Sample recipe (mock data)':x.source.name===x.source.provider?`From ${esc(x.source.provider)}`:`${esc(x.source.name)} · via ${esc(x.source.provider)}`;
+const srcBadge=x=>x.sourceType==='saved'?'<span class="sbadge mine">📚 My recipe</span>':x.sourceType==='generated'?'<span class="sbadge st">✨ Smart Treat</span>':x.source.provider==='Claude'?'<span class="sbadge st">✨ Idea by Claude</span>':x.source.provider==='mock'?'<span class="sbadge">Mock data</span>':'<span class="sbadge web">🌐 Web recipe</span>';
+const srcLabel=x=>x.sourceType==='saved'?'From your cookbook':x.sourceType==='generated'?'Created from your pantry':x.source.provider==='Claude'?'Recipe idea by Claude':x.source.provider==='mock'?'Sample recipe (mock data)':x.source.name===x.source.provider?`From ${esc(x.source.provider)}`:`${esc(x.source.name)} · via ${esc(x.source.provider)}`;
 function discImg(x){return x.image?`<img src="${esc(x.image)}" alt="" loading="lazy">`:`<span>${recipeTags(x).has('smoothie')?'🥤':recipeTags(x).has('pudding')?'🍮':recipeTags(x).has('breakfast')?'🥞':recipeTags(x).has('meal')?'🥗':'🧁'}</span>`}
 function discCard(x){
   const pct=Math.round(x.pantryMatchPercent);
   const badges=[...x.matchedRequirements.map(r=>`<span class="badge y">${esc(r)}</span>`),...x.matchedGoals.map(g=>`<span class="badge">${esc(g)}</span>`),
     x.totalMinutes!=null?`<span class="badge">${x.totalMinutes} min</span>`:'',x.requiredIngredientCount<=5?`<span class="badge">${x.requiredIngredientCount} ingredients</span>`:'',
     x.requirementsNotMet.length?`<span class="badge warnb">Make It Mine for ${esc(x.requirementsNotMet.join(', '))}</span>`:'',x.requirementsUnsure.length?`<span class="badge warnb">Check: ${esc(x.requirementsUnsure.join(', '))}</span>`:''].join('');
-  const saved=x.sourceType==='external'&&DB.recipes.some(r=>r.externalSource&&r.externalSource.key===x.id);
+  const saved=x.sourceType!=='saved'&&DB.recipes.some(r=>r.externalSource&&r.externalSource.key===x.id);
   return `<div class="dcard"><button class="dimg" data-act="d-open" data-v="${esc(x.id)}">${discImg(x)}<span class="match ${pct>=80?'hi':pct>=50?'mid':'lo'}">${pct}% pantry match</span></button>
-  <div class="dbody"><p class="dsrc">${srcLabel(x)}</p><h3>${esc(x.name)}</h3>
+  <div class="dbody"><p class="dsrc">${srcBadge(x)} ${srcLabel(x)}</p><h3>${esc(x.name)}</h3>
   <div class="hv"><div><small>You have</small>${x.ingredientsHave.slice(0,6).map(i=>`<span class="ok">✓ ${esc(cap(canonicalIngredient(i.name).display.toLowerCase()))}</span>`).join('')}${x.ingredientsHave.length>6?`<span class="muted">+${x.ingredientsHave.length-6} more</span>`:''}${!x.ingredientsHave.length?'<span class="muted">—</span>':''}</div>
-  <div><small>You need</small>${x.ingredientsMissing.map(i=>`<span class="no">+ ${esc(cap(i.name))}${i.possible?` <em>(you have ${esc(i.possible)})</em>`:''}</span>`).join('')||'<span class="ok">Nothing!</span>'}</div></div>
+  <div><small>You need</small>${x.ingredientsMissing.map(i=>`<span class="no">+ ${esc(cap(canonicalIngredient(i.name).display.toLowerCase()))}</span>`).join('')||'<span class="ok">✓ You have everything</span>'}</div></div>
+  ${x.substitutions&&x.substitutions.length?`<p class="subs">${x.substitutions.map(t=>'↺ '+esc(t)).join('<br>')}</p>`:''}
   ${badges?`<div class="badges" style="margin-top:10px">${badges}</div>`:''}
   ${x.recommendationReasons.length?`<p class="why2">${esc(x.recommendationReasons.slice(0,2).join(' '))}</p>`:''}
-  <div class="row-btns" style="margin-top:12px"><button class="btn btn-primary" data-act="d-open" data-v="${esc(x.id)}">View recipe</button>${x.sourceType==='external'?`<button class="btn btn-ghost" data-act="d-save" data-v="${esc(x.id)}">${saved?'♥ Saved':'♡ Save'}</button>`:`<button class="btn btn-ghost" data-act="d-addall" data-v="${esc(x.id)}" ${x.missingIngredientCount?'':'disabled'}>🛒 Missing</button>`}</div></div></div>`;
+  <div class="row-btns" style="margin-top:12px"><button class="btn btn-primary" data-act="d-open" data-v="${esc(x.id)}">View recipe</button>${x.sourceType!=='saved'?`<button class="btn btn-ghost" data-act="d-save" data-v="${esc(x.id)}">${saved?'♥ Saved':'♡ Save'}</button>`:`<button class="btn btn-ghost" data-act="d-addall" data-v="${esc(x.id)}" ${x.missingIngredientCount?'':'disabled'}>🛒 Missing</button>`}</div></div></div>`;
 }
 function screenDiscoverResults(){
   const D=discState(), top=`<div class="topbar"><div class="left"><button class="iconbtn" data-act="back">${I.back} Back</button></div><div class="topbar-title">Results</div><div class="right" style="min-width:48px"></div></div>`;
-  if(D.state==='working')return `${top}<div class="working"><div class="whisker">${I.whisk}</div><h1 class="wtitle">Looking through your kitchen…</h1><p class="sub">Checking your cookbook${TheMealDBProvider.available()?', TheMealDB':''}${ui.aiReady?' and asking Claude for ideas':''}.</p><div class="stream" id="w-stream" hidden></div></div>`;
+  if(D.state==='working')return `${top}<div class="working"><div class="whisker">${I.whisk}</div><h1 class="wtitle">Looking through your kitchen…</h1><p class="sub">Checking your cookbook, building Smart Treats from your pantry${TheMealDBProvider.available()?', searching TheMealDB':''}${ui.aiReady?' and asking Claude for ideas':''}.</p><div class="stream" id="w-stream" hidden></div></div>`;
   const res=D.res; if(!res){ui.screen='discover';return screenDiscover()}
   const notes=(res.notes||[]).map(n=>`<p class="note">${esc(n.text)}</p>`).join('');
   if(res.empty==='pantry')return `${top}<div class="empty" style="margin-top:20px"><p>Add a few ingredients to My Pantry first.</p><button class="btn btn-primary" data-act="pantry">Open My Pantry</button></div>`;
   const groups=groupDiscovery(res.results);
   return `${top}<h1 class="wtitle" style="margin-top:8px">✨ Here's what you can make</h1><p class="sub" style="font-size:17.5px">Based on what you already have.</p>${notes}
+  ${res.counts?`<p class="sub" style="margin-top:6px">${res.results.length} ideas · ${res.counts.generated} Smart Treats built from your pantry${res.counts.saved?` · ${res.counts.saved} saved recipes checked`:''}${res.counts.web?` · ${res.counts.web} from the web`:''}${res.counts.ai?` · ${res.counts.ai} Claude ideas`:''}</p>`:''}
   ${groups.length?groups.map(([k,t,sub,list])=>`<section><div class="sec-head"><h2>${t}</h2></div>${sub?`<p class="sub" style="margin:-6px 0 12px">${sub}</p>`:''}<div class="stack">${list.map(discCard).join('')}</div></section>`).join('')
   :`<div class="empty" style="margin-top:18px"><p>Nothing matched closely enough.</p><small>Try allowing 1–3 missing ingredients.</small><button class="btn btn-ghost" data-act="back">Change my search</button></div>
     ${res.nearMisses&&res.nearMisses.length?`<section><div class="sec-head"><h2>Closest ideas</h2></div><div class="stack">${res.nearMisses.map(discCard).join('')}</div></section>`:''}`}`;
@@ -3489,21 +3718,24 @@ function screenDiscovered(){
   return `<div class="topbar"><div class="left"><button class="iconbtn" data-act="back">${I.back} Back</button></div><div class="topbar-title">${esc(x.name)}</div><div class="right" style="min-width:48px"></div></div>
   <div class="dhero">${discImg(x)}</div>
   <h1 class="rtitle" style="margin-top:16px">${esc(x.name)}</h1>
-  <p class="dsrc" style="margin-top:6px">${srcLabel(x)}${x.source&&x.source.url?` · <a href="${esc(x.source.url)}" target="_blank" rel="noopener">original recipe</a>`:''}</p>
+  <p class="dsrc" style="margin-top:6px">${srcBadge(x)} ${srcLabel(x)}${x.source&&x.source.url?` · <a href="${esc(x.source.url)}" target="_blank" rel="noopener">original recipe</a>`:''}</p>
   ${x.source&&x.source.attribution?`<p class="sub" style="font-size:14px">${esc(x.source.attribution)}</p>`:''}
   ${x.description?`<p class="rdesc">${esc(x.description)}</p>`:''}
   ${metaHTML({prepTime:x.prepTime||'',cookTime:x.cookTime||(x.totalMinutes&&!x.prepTime?x.totalMinutes+' min total':''),tempText:''})}
-  <p class="sub" style="margin-top:8px">${x.servings?`Original servings: ${x.servings}`:"Servings weren't included in the source."}</p>
+  <p class="sub" style="margin-top:8px">${x.servings?`${x.sourceType==='generated'?'Makes':'Original servings'}: ${x.servings}`:"Servings weren't included in the source."}${x.tempText?` · Oven ${esc(x.tempText)}`:''}</p>
+  <div class="badges" style="margin-top:10px"><span class="match-inline ${Math.round(m.pantryMatchPercent)>=80?'hi':'mid'}">${Math.round(m.pantryMatchPercent)}% pantry match</span>${filterForRequirements(x.ingredients.filter(i=>!i.optional),D.required,D.avoid).met.map(q=>`<span class="badge y">${esc(q)}</span>`).join('')}${x.confidence?`<span class="pill conf-${x.confidence}">${x.confidence==='high'?'Made entirely from your pantry':'Uses a substitute or a missing item'}</span>`:''}</div>
+  ${x.note?`<p class="note y">${esc(x.note)}</p>`:''}
+  ${m.substitutions.length?`<p class="note">${m.substitutions.map(t=>'↺ '+esc(t)).join('<br>')}</p>`:''}
   <section class="card pcheck-card"><p class="tier nice" style="display:inline-block">Pantry check</p>
     <h2 style="margin-top:10px">You already have ${m.availableIngredientCount} of ${m.requiredIngredientCount} ingredients</h2>
-    <div class="plist" style="margin-top:12px">${m.have.map(i=>`<div class="yi-row">${HAVE_IC}<div><b>${esc(lineOf(i))}</b><small>${i.via==='tap'?'From the tap':i.via==='staple'?'Kitchen staple':esc(String(i.via).toUpperCase())}${i.level==='compatible'&&i.note?' · '+esc(i.note):''}</small></div></div>`).join('')}</div>
+    <div class="plist" style="margin-top:12px">${m.have.map(i=>`<div class="yi-row">${HAVE_IC}<div><b>${esc(lineOf(i))}</b><small>${i.via==='tap'?'From the tap':i.via==='staple'?'Kitchen staple':esc(String(i.via).toUpperCase())}${(i.level==='compatible'||i.level==='substitute')&&i.note?' · '+esc(i.note):''}</small></div></div>`).join('')}</div>
     ${m.missing.length?`<h3 class="ptitle">Missing</h3><div class="plist">${m.missing.map(i=>{const k=canonicalIngredient(i.name).key,on=shoppingFind(k);return `<div class="yi-row need">${NEED_IC}<div style="flex:1"><b>${esc(lineOf(i))}</b>${i.possible?`<small>You have ${esc(i.possible)} — Make It Mine can decide if it works</small>`:''}</div>${on?'<span class="muted small">🛒 On list</span>':`<button class="mini-btn" data-act="d-add1" data-v="${esc(i.id)}">+ Add</button>`}</div>`}).join('')}</div>
     <button class="btn btn-soft" style="margin-top:12px" data-act="d-addall" data-v="${esc(x.id)}">🛒 Add missing to shopping list</button>`:'<p class="note g" style="margin-top:12px"><b>You have everything.</b></p>'}
     ${m.optional.length?`<p class="sub" style="margin-top:10px">Optional: ${esc(m.optional.map(i=>i.name).join(', '))}</p>`:''}</section>
   <section class="card"><h2>Nutrition</h2>${nutri?`<p class="sub">Per serving, estimated from typical values.</p>${nutTable([{label:'Per serving',per:nutri}])}`:'<p class="sub" style="margin-top:6px">Nutrition information not available.</p>'}</section>
   ${x.ingredients.length?`<section class="card"><h2>Ingredients</h2>${ingListHTML(x.ingredients)}</section>`:''}
   ${x.instructions&&x.instructions.length?`<section class="card"><h2>Method</h2>${stepsListHTML(x.instructions)}</section>`:x.source&&x.source.url?`<p class="note">The method is on the <a href="${esc(x.source.url)}" target="_blank" rel="noopener">original recipe page</a>.</p>`:''}
-  ${x.sourceType==='external'?`<button class="btn btn-ghost" style="margin-top:16px" data-act="d-save" data-v="${esc(x.id)}">${saved?'♥ Saved to My Recipes':'♡ Save to My Recipes'}</button>`:`<button class="btn btn-ghost" style="margin-top:16px" data-act="open" data-id="${esc(x.id)}">Open in My Recipes</button>`}
+  ${x.sourceType!=='saved'?`<button class="btn btn-ghost" style="margin-top:16px" data-act="d-save" data-v="${esc(x.id)}">${saved?'♥ Saved to My Recipes':'♡ Save to My Recipes'}</button>`:`<button class="btn btn-ghost" style="margin-top:16px" data-act="open" data-id="${esc(x.id)}">Open in My Recipes</button>`}
   <div class="footbar"><div class="footbar-in"><button class="btn btn-primary" data-act="d-mine" data-v="${esc(x.id)}">${I.spark} Make It Mine</button></div></div>`;
 }
 
@@ -4059,6 +4291,7 @@ function statusSheet(p){
   sheetState={pid:p.id};
   openSheet(`<h2>${esc(p.productName)}</h2>${p.brand?`<p class="sub">${esc(p.brand)}</p>`:''}
   <div class="seg" style="margin-top:14px">${Object.entries(PANTRY_STATUS).map(([k,l])=>`<button class="${p.status===k?'on':''}" data-act="ps-set" data-v="${k}">${l}</button>`).join('')}</div>
+  <button class="btn btn-ghost" data-act="ps-soon">${p.useSoon?'✓ Use soon — tap to remove':'⏳ Mark as Use soon'}</button>
   ${p.status!=='have'&&!shoppingFind(p.canonicalName)?`<button class="btn btn-soft" data-act="ps-list">🛒 Add to shopping list</button>`:''}
   <button class="btn btn-ghost" data-act="p-open" data-v="${p.id}">Edit details</button>`);
 }
@@ -4179,8 +4412,8 @@ function discAddMissing(x,only){
 }
 function saveDiscovered(x){
   let r=DB.recipes.find(z=>z.externalSource&&z.externalSource.key===x.id);if(r)return r;
-  const O=discoveredToImport(x);
-  r=newRecipe({name:x.name,description:x.description||'',category:guessCat(x.name),servings:x.servings||'',status:'idea',original:clone(O),originalSource:x.source&&x.source.url||'',
+  const O=discoveredToImport(x);O.tempText=x.tempText||'';
+  r=newRecipe({name:x.name,description:x.description||'',category:guessCat(x.name),servings:x.servings||'',status:'idea',tempText:x.tempText||'',original:clone(O),originalSource:x.source&&x.source.url||'',
     adaptedIngredients:O.ingredients.map(i=>({...i,id:uid(),n:{}})),adaptedInstructions:[...O.instructions],prepTime:x.prepTime||'',cookTime:x.cookTime||'',
     sourceType:'discovered',externalSource:{...x.source,key:x.id},referencePhoto:null});
   r.versions=[{id:uid(),n:1,createdAt:Date.now(),label:'Version 1',source:'manual',ingredients:clone(r.adaptedIngredients),instructions:[...r.adaptedInstructions],servings:r.servings,changes:[]}];
@@ -4208,7 +4441,9 @@ Object.assign(ACT,{
     W=freshW();W.found=discoveredToImport(x);W.mode='discovered';W.url=x.source&&x.source.url||'';W.source={...x.source,key:x.id};W.sourceType='discovered';W.category=guessCat(x.name);
     W.needs={reqs:[...ui.disc.required],goals:[...new Set([...(DB.preferences.goals||[]),...ui.disc.mood.map(k=>gmap[k]).filter(Boolean)])],texture:[],strength:'balanced',portion:'keep',usePantry:true,priorities:[],set:true};rebuildPriorities();
     W.stage='found';saveW();openWizard();toast('Check the recipe, then make it yours')},
-  'pf-staple':()=>{ui.pdraft.staple=!ui.pdraft.staple;keepScroll(()=>{})}
+  'pf-staple':()=>{ui.pdraft.staple=!ui.pdraft.staple;keepScroll(()=>{})},
+  'pf-soon':()=>{ui.pdraft.useSoon=!ui.pdraft.useSoon;keepScroll(()=>{})},
+  'ps-soon':()=>{const p=findProduct(sheetState.pid);p.useSoon=!p.useSoon;persist();closeSheet();toast(p.useSoon?`${p.productName} marked Use soon`:'Use soon removed');keepScroll(()=>{})}
 });
 
 /* ============ events ============ */
