@@ -478,6 +478,10 @@ select.inp{appearance:none;-webkit-appearance:none;background-image:linear-gradi
 .parsed dt{font:900 12.5px var(--font);letter-spacing:.06em;text-transform:uppercase;color:var(--ink2)}
 .parsed dd{margin:0;font:800 16.5px/1.4 var(--font)}
 .flag{display:inline-block;background:var(--butter);color:#3E2A00;font:900 12px var(--font);letter-spacing:.05em;text-transform:uppercase;padding:5px 9px;border-radius:999px}
+/* ---------- screenshot review flags ---------- */
+.flist li.rev{background:var(--butter-soft);border-radius:12px;padding-left:10px;padding-right:10px}
+.ingrow.rev{outline:2.5px solid var(--butter)}
+.ingrow .flag{justify-self:start}
 /* ---------- results ---------- */
 .ready-badge{display:inline-flex;align-items:center;gap:8px;background:var(--rasp-soft);color:var(--rasp-ink);font:900 15px var(--font);padding:8px 14px;border-radius:999px}
 .ready-badge svg{width:18px;height:18px;stroke-width:3}
@@ -716,6 +720,25 @@ details.fold>summary small{font-weight:700;color:var(--ink2);font-size:15px;marg
   .p-recipe li{margin:2pt 0}
   .p-recipe h3{font:700 11pt Helvetica,Arial,sans-serif;margin:8pt 0 2pt}
 }
+.fxs .fx{border-top:1px solid var(--line);padding-top:12px;margin-top:12px}
+.fxs .fx h3{font:900 13px var(--font);letter-spacing:.06em;text-transform:uppercase;color:var(--rasp);margin:0 0 6px}
+.fxs .fx p{margin:0;font-size:16.5px;line-height:1.5}
+.nsrc{margin:0 0 8px!important;font-size:14px!important}
+.ntab{width:100%;border-collapse:collapse;font-size:16.5px}
+.ntab th{text-align:left;font-weight:700;color:var(--ink2);padding:6px 0;border-bottom:1px solid var(--line)}
+.ntab td{text-align:right;font-weight:900;padding:6px 0;border-bottom:1px solid var(--line)}
+.ntab tr:last-child th,.ntab tr:last-child td{border-bottom:0}
+.dtags{display:flex;flex-wrap:wrap;gap:8px}
+.dtag{background:var(--bg);border:2px solid var(--line);border-radius:14px;padding:6px 12px;font:800 15px/1.3 var(--font);max-width:100%}
+.flist.dot li{padding-left:18px;position:relative;margin-top:6px}
+.flist.dot li::before{content:'';position:absolute;left:2px;top:.62em;width:7px;height:7px;border-radius:50%;background:var(--rasp)}
+.revitem{border:2px dashed var(--line);border-radius:16px;padding:10px 12px}
+.revitem p{margin:0 0 8px;font-size:16px;line-height:1.45}
+.revbtns{display:flex;flex-wrap:wrap;gap:6px}
+.revbtns button{min-height:40px;padding:0 12px;border-radius:999px;border:2px solid var(--line);background:var(--card);font:800 14px var(--font);color:var(--ink);display:inline-flex;align-items:center}
+.revbtns button svg{width:18px;height:18px}
+.ngrid{display:grid;grid-template-columns:1fr 1fr;gap:0 12px}
+.ngrid small{font-weight:600;color:var(--ink2)}
 </style>
 </head>
 <body>
@@ -1042,15 +1065,15 @@ function detectYield(text){
   return null;
 }
 /** explicitServings(text) — only an explicit statement counts as a serving number */
-const SERVE_UNITS='slices?|pieces?|squares?|muffins?|cupcakes?|cookies?|bars?|brownies?|blondies?|balls?|bites?|cups?|pancakes?|waffles?|portions?|servings?|scones?|rolls?|truffles?|bowls?|glasses|glass|jars?|pots?|wedges?|triangles?';
-const unitSingular=w=>String(w||'').toLowerCase().replace(/glasses$/,'glass').replace(/(slice|piece|square|muffin|cupcake|cookie|bar|brownie|blondie|ball|bite|cup|pancake|waffle|portion|serving|scone|roll|truffle|bowl|jar|pot|wedge|triangle)s$/,'$1');
+const SERVE_UNITS='slices?|pieces?|squares?|muffins?|cupcakes?|cookies?|bars?|brownies?|blondies?|balls?|bites?|cups?|pancakes?|waffles?|portions?|servings?|scones?|rolls?|buns?|biscuits?|doughnuts?|donuts?|bagels?|flapjacks?|crackers?|tartlets?|crepes?|crêpes?|truffles?|bowls?|glasses|glass|jars?|pots?|ramekins?|wedges?|triangles?|people|persons?';
+const unitSingular=w=>String(w||'').toLowerCase().replace(/glasses$/,'glass').replace(/^loaves$/,'loaf').replace(/^(people|persons?)$/,'').replace(/(slice|piece|square|muffin|cupcake|cookie|bar|brownie|blondie|ball|bite|cup|pancake|waffle|portion|serving|scone|roll|bun|biscuit|doughnut|donut|bagel|flapjack|cracker|tartlet|tart|pie|crepe|crêpe|truffle|bowl|jar|pot|ramekin|wedge|triangle)s$/,'$1');
 /** explicitServings(text, {bare}) — only explicit statements count; layers/pans never do.
     bare:true also accepts a lone "12 squares" (used right under a SERVINGS heading). */
 function explicitServings(text,opts={}){
   const t=String(text||'').toLowerCase().trim(), U=SERVE_UNITS;
   if(/\b(layer|tier|pans?|tins?|loaf|loaves|sheets?)\b/.test(t)&&!new RegExp(`\\b(${U})\\b`).test(t))return null;
   let m=t.match(new RegExp(`\\b(?:serves|servings?|portions?|yield|yields|makes)\\s*:?\\s*(?:about\\s+|approx\\.?\\s+)?(\\d+)(?:\\s*(?:–|-|to)\\s*\\d+)?\\s*(${U})?\\b`));
-  if(m)return {servings:+m[1],unit:m[2]?unitSingular(m[2]):''};
+  if(m)return {servings:+m[1],unit:m[2]&&!/^(servings?|portions?|people|persons?)$/.test(m[2])?unitSingular(m[2]):''};
   m=t.match(new RegExp(`^(?:about\\s+)?(\\d+)(?:\\s*(?:–|-|to)\\s*\\d+)?\\s+(${U})${opts.bare?'\\b':'\\s*$'}`));
   if(m&&(opts.bare||!/^cups?$/.test(m[2])))return {servings:+m[1],unit:/^servings?$|^portions?$/.test(m[2])?'':unitSingular(m[2])};
   if(opts.bare){m=t.match(/^(\d+)$/);if(m)return {servings:+m[1],unit:''}}
@@ -1764,99 +1787,271 @@ function fromImportShape(x){
 const NOISE_HEADERS=/^(original|recipe|ingredients?|you(?:'|’)ll need|what you need)\b[^.]{0,30}:?$/i;
 const METHOD_HEADERS=/^(method|instructions?|directions?|steps?|preparation|how to( make( it)?)?)\b[^.]{0,30}:?$/i;
 function looksLikeIngredient(l){return /^([-•*·]\s*)?(\d|½|¼|¾|⅓|⅔|⅛|a\s+(pinch|cup|handful)|pinch|dash|handful)/i.test(l)&&l.length<90&&!/^\d+[.)]\s+[A-Za-z]/.test(l)}
-/* ---------- section-aware recipe parser ----------
+/* ---------- section-aware recipe parser (v2) ----------
    1) find the sections, 2) parse each section by its own rules.
-   Anything it can't place goes to "Needs review" — never into Method. */
+   Method ends at ANY other heading (nutrition, tips, storage, notes…).
+   Anything it can't place goes to "Unclassified / needs review" — never into Method.
+   Nothing is invented: nutrition, servings and quantities are only taken from the text. */
 const SEC_HEAD={
-  ingredients:/^(ingredients?|you(?:'|’)ll need|what you(?:'|’)ll need|what you need|shopping list)$/,
-  method:/^(method|instructions?|directions?|steps?|preparation|how to make(?: it)?)$/,
-  servings:/^(servings?|serves|yield|yields|makes|portions?|serving information|serving info)$/,
-  pan:/^(pan|pan size|tin|tin size|baking pan|baking tin|baking dish|dish|equipment)$/,
-  oven:/^(oven|oven temp(?:erature)?|temperature|temp|bake at)$/,
-  cook:/^(bake time|baking time|cook time|cooking time|time|total time|bake)$/,
-  prep:/^(prep|prep time|preparation time|active time)$/,
-  nutrition:/^((?:estimated |approx(?:imate)?\.? )?nutrition(?: per (?:serving|square|slice|piece|portion|bar|muffin|cookie))?(?: information| info| facts)?)$/,
-  storage:/^(storage|storing|to store|keeps)$/,
+  ingredients:/^(ingredients?(?: list)?|you'll need|what you'll need|what you need|shopping list|ingredienser|zutaten)$/,
+  method:/^(method|instructions?|directions?|steps?|preparation(?: method)?|how to make(?: it| them| the [a-z ]{2,30})?|making (?:it|them)|fremgangsmåte|zubereitung)$/,
+  servings:/^(servings?|serves|yield|yields|makes|portions?|serving information|serving info|serving size|number of servings|quantity|amount)$/,
+  pan:/^(pan|pan size|tin|tin size|baking pan|baking tin|baking dish|dish|equipment|you will need equipment)$/,
+  oven:/^(oven|oven temp(?:erature)?|temperature|temp|bake at|baking temp(?:erature)?|heat)$/,
+  cook:/^(bake time|baking time|cook time|cooking time|bake|baking|cook)$/,
+  total:/^(total time|time|total|ready in)$/,
+  prep:/^(prep|prep time|preparation time|active time|hands-on time)$/,
+  rest:/^(rest|resting|rest(?:ing)? time|proof(?:ing)?(?: time)?|prove time|proving time|rising time|rise time|chill(?:ing)? time|setting time|set time|cooling time|soak(?:ing)? time|inactive time)$/,
+  category:/^(category|categories|course|meal|recipe type|type|cuisine|recipe category)$/,
+  description:/^(description|about(?: this recipe| the recipe| these [a-z]+)?|intro(?:duction)?|summary|overview)$/,
+  nutrition:/^(?:(?:estimated|approx(?:imate)?|rough|average|approximate) )?(?:nutrition(?:al)?(?: (?:information|info|facts|values|breakdown|estimate|data))?|macros|macronutrients|nutrition facts)(?: \(?(?:per|for)(?: (?:1|one|a|each))? [a-z0-9][a-z0-9 -]{0,24}\)?)?(?: \(?(?:approx\.?|approximate|estimated|estimate)\)?)?$/,
+  storage:/^(storage|storing|to store|how to store|keeps|keeping|storage (?:and|&) freezing|storage (?:and|&) reheating|storage instructions|freezing|to freeze|freezer|make ahead (?:and|&) storage|leftovers)$/,
   status:/^(recipe status|status)$/,
-  tags:/^(dietary tags?|tags|dietary|diet|dietary info(?:rmation)?|allergens?)$/,
-  notes:/^(notes?|aj(?:'s)? notes?|cook(?:'|’)?s notes?|recipe notes?|tips?|aj(?:'s)? tips?|probiotic notes?|important(?: test)?(?: notes?)?|test notes?|substitutions?|variations?|serving suggestions?|make ahead|source|why it works|about)$/
+  tags:/^(dietary tags?|tags|dietary|diet|dietary info(?:rmation)?|dietary notes?|dietary requirements|allergens?|allergen info(?:rmation)?|allergy info(?:rmation)?|suitable for|free from)$/,
+  tips:/^((?:baking|aj's|aj|top|pro|cooking|helpful|success|chef's|expert|my|kitchen) tips?|tips?(?: (?:for success|(?:&|and) tricks|(?:&|and) notes))?|troubleshooting|tricks)$/,
+  notes:/^(notes?|aj'?s? notes?|cook'?s notes?|recipe notes?|kitchen notes?|probiotic notes?|important(?: test)?(?: notes?)?|test notes?|substitutions?|swaps|variations?|serving suggestions?|make ahead|source|why it works|final notes?|extra notes?)$/
 };
-const META_KEYS=['servings','pan','oven','cook','prep'];
-const headKey=line=>{const k=String(line).toLowerCase().replace(/^[#*\s\p{Extended_Pictographic}\uFE0F]+/u,'').replace(/[:：\s]+$/,'').trim();for(const n in SEC_HEAD)if(SEC_HEAD[n].test(k))return n;return null};
+const META_KEYS=['servings','pan','oven','cook','prep','rest','total','category'];
+const HEAD_CLEAN=s=>String(s).toLowerCase().replace(/[’`]/g,"'").replace(/[*_]+/g,'').replace(/^[#>\s\p{Extended_Pictographic}️‍•·▪–—-]+/u,'').replace(/[\s\p{Extended_Pictographic}️‍]+$/u,'').replace(/[:：\s.]+$/,'').replace(/\s+/g,' ').trim();
+function headInfo(line){
+  const k=HEAD_CLEAN(line); if(!k||k.length>60||/^\d/.test(k))return null;
+  const test=s=>{for(const n in SEC_HEAD)if(SEC_HEAD[n].test(s))return n;return null};
+  let key=test(k); if(key)return {key,extra:''};
+  const pm=k.match(/^(.*?)\s*\(([^)]{1,60})\)$/); if(pm){key=test(pm[1].trim());if(key)return {key,extra:pm[2]}}
+  const fm=k.match(/^(ingredients?|method|instructions|directions)\s+(?:for|to make)\s+(?:the\s+)?(.{2,30})$/); if(fm)return {key:/^ingr/.test(fm[1])?'ingredients':'method',extra:'',group:fm[2]};
+  const dm=k.match(/^(ingredients?|method|instructions|servings|serves|makes|yield)\s*[-–—|]\s*(.{1,40})$/); if(dm){key=test(dm[1]);if(key)return {key,extra:dm[2]}}
+  return null;
+}
+const headKey=line=>{const h=headInfo(line);return h?h.key:null};
 /** ALL-CAPS titles read nicely: "AJ'S PUMPKIN CAKE WITH…" → "AJ's Pumpkin Cake with…" */
-function prettyTitle(t){if(t!==t.toUpperCase())return t;const small=new Set(['a','an','and','of','the','with','in','on','for','or','to']);return t.toLowerCase().split(/\s+/).map((w,i)=>/^aj'?s$|^aj$/.test(w)?w.toUpperCase().replace("'S","'s"):i&&small.has(w)?w:w.charAt(0).toUpperCase()+w.slice(1)).join(' ')}
+function prettyTitle(t){if(t!==t.toUpperCase())return t;const small=new Set(['a','an','and','of','the','with','in','on','for','or','to']);return t.toLowerCase().split(/\s+/).map((w,i)=>/^aj['’]?s$|^aj$/.test(w)?w.toUpperCase().replace(/(['’])S$/,'$1s'):i&&small.has(w)?w:w.charAt(0).toUpperCase()+w.slice(1)).join(' ')}
 const isAllCaps=l=>/[A-ZÆØÅÄÖÜ]/.test(l)&&l===l.toUpperCase()&&!/\d/.test(l)&&l.replace(/[^A-Za-zÆØÅÄÖÜæøåäöü]/g,'').length>=3&&l.split(/\s+/).length<=7;
-const isTagLine=l=>/(gluten|lactose|dairy|nut|soy|egg|sugar)[- ]?free|vegan|vegetarian|adaptable|paleo|keto|high[- ]protein|low[- ](sugar|carb|fat)|refined[- ]sugar/i.test(l)&&(/[•·|,\/]/.test(l)||l.split(/\s+/).length<=4)&&l.length<160&&!/^\d/.test(l);
-const QTY_FREE=/\b(for (?:topping|garnish|serving|dusting|decorating|decoration|sprinkling|greasing)|to taste|optional|as needed|as required|a pinch|pinch of|sprinkle(?: of)?|a sprinkle|to serve|a handful)\b/i;
+/** a dietary tag line: EVERY item is a short dietary label ("Gluten-Free • Nut-Free"). A sentence that merely mentions "gluten-free" is a description, not tags. */
+const DIET_WORD=/(gluten|lactose|dairy|nut|peanut|soy|egg|sugar|grain|wheat|oil|fodmap)[- ]?free|vegan|vegetarian|plant[- ]based|paleo|keto|whole30|high[- ](?:protein|fibre|fiber)|low[- ](?:sugar|carb|fat|fodmap|calorie)|refined[- ]sugar|adaptable|coeliac|celiac|halal|kosher|kid[- ]friendly|freezer[- ]friendly|no[- ]bake|protein[- ]packed|diabetic|dairy|gluten|lactose/i;
+const splitTags=l=>{const out=[];let depth=0,cur='';for(const ch of l){if(ch==='(')depth++;if(ch===')')depth=Math.max(0,depth-1);if(!depth&&/[•·|,\/;]/.test(ch)){if(cur.trim())out.push(cur.trim());cur=''}else cur+=ch}if(cur.trim())out.push(cur.trim());return out.map(x=>x.replace(/\.$/,'').trim()).filter(Boolean)};
+const isTagLine=l=>{if(l.length>160||/^\d/.test(l))return false;const parts=splitTags(l);return parts.length>0&&parts.every(p=>p.replace(/\([^)]*\)/g,'').trim().split(/\s+/).length<=4&&DIET_WORD.test(p))};
+const QTY_FREE=/\b(for (?:topping|garnish|serving|dusting|decorating|decoration|sprinkling|greasing|brushing)|to taste|optional|as needed|as required|a pinch|pinch of|sprinkle(?: of)?|a sprinkle|to serve|a handful)\b/i;
 function parseIngredientLine(l,group){
+  let opt=/\boptional\b/i.test(l)||/\boptional\b/i.test(group||'');
+  l=l.replace(/^optional\s*[:\-–]\s*/i,'');
   const p=parseLine(l)||{amount:'',unit:'',name:l};
   const free=QTY_FREE.exec(l);
-  let name=p.name.replace(/\s*\((?:optional)\)\s*/i,' ').trim();
+  let name=p.name.replace(/\s*\((?:optional)\)\s*/i,' ').replace(/,\s*optional\s*$/i,'').trim();
+  if(p.unit&&/^(pinch|dash|handful|sprinkle|splash|drizzle)/i.test(p.unit))name=name.replace(/^of\s+/i,'');
   const usage=free?free[1].toLowerCase():'';
-  if(free&&!p.amount){name=name.replace(QTY_FREE,'').replace(/\s{2,}/g,' ').replace(/[,\s]+$/,'').trim();if(usage&&!/optional/.test(usage))name=`${name}, ${usage}`}
-  return {id:uid(),group,amount:p.amount,unit:p.unit,name,optional:/\boptional\b/i.test(l),usage};
+  if(free&&!p.amount&&!(p.unit&&/pinch|sprinkle|handful/.test(usage))){name=name.replace(QTY_FREE,'').replace(/\s{2,}/g,' ').replace(/[,\s]+$/,'').trim();if(usage&&!/optional/.test(usage))name=`${name}, ${usage}`}
+  return {id:uid(),group,amount:p.amount,unit:p.unit,name,optional:opt,usage};
 }
+/* ---------- nutrition (the recipe's OWN figures — never calculated, never invented) ---------- */
+const NUTR_NAME='saturated fat|sat\\.? fat|saturates|of which sugars?|total sugars?|added sugars?|sugars?|dietary fib(?:re|er)|fib(?:re|er)|net carbs|total carb(?:ohydrate)?s?|carb(?:ohydrate)?s?|protein|total fat|fats?|sodium|salt|calories|energy|kcal|kilocalories|cals?|cholesterol';
+const NUTR_NUM='(\\d+(?:[.,]\\d+)?(?:\\s*(?:-|–|to)\\s*\\d+(?:[.,]\\d+)?)?)';
+const NUTR_UNIT='(kcal|kj|cal|calories|mg|g|grams?)';
+const NUTR_LABEL={kcal:'Calories',kj:'Energy (kJ)',protein:'Protein',carbs:'Carbohydrates',fat:'Fat',satFat:'Saturated fat',fibre:'Fibre',sugar:'Sugar',sodium:'Sodium',salt:'Salt',cholesterol:'Cholesterol'};
+const NUTR_ORDER=['kcal','kj','protein','carbs','fat','satFat','fibre','sugar','sodium','salt','cholesterol'];
+function nutrKey(name,unit){const n=name.toLowerCase();
+  if(/sat/.test(n))return 'satFat'; if(/sugar/.test(n))return 'sugar'; if(/fib/.test(n))return 'fibre'; if(/carb/.test(n))return 'carbs';
+  if(/protein/.test(n))return 'protein'; if(/fat/.test(n))return 'fat'; if(/sodium/.test(n))return 'sodium'; if(/salt/.test(n))return 'salt'; if(/cholesterol/.test(n))return 'cholesterol';
+  if(/kj/i.test(unit||''))return 'kj'; return 'kcal'}
+function nutrVal(s){s=s.replace(/,/g,'.').replace(/\s*(?:-|–|to)\s*/,'–');return /–/.test(s)?s:+s}
+/** parseNutritionLine("Calories: 245 kcal") → {kcal:{value:245,unit:'kcal'}} — supports "11 g protein", "Protein 11g", tables "Calories | 245", "245 kcal · 11 g protein" */
+function parseNutritionLine(line){
+  const res={}; let s=' '+String(line).replace(/\s*\|\s*/g,' | ')+' ';
+  const put=(k,v,u)=>{if(res[k]==null)res[k]={value:nutrVal(v),unit:(u||'').toLowerCase().replace(/^grams?$/,'g').replace(/^calories$/,'kcal').replace(/^cal$/,'kcal')}};
+  // 1) "245 kcal" / "1025 kJ"
+  s=s.replace(new RegExp(`(?:~|≈|approx\\.?\\s*|about\\s*)?${NUTR_NUM}\\s*(kcal|kj|cals?|calories)\\b`,'gi'),(m,v,u)=>{put(/kj/i.test(u)?'kj':'kcal',v,/kj/i.test(u)?'kJ':'kcal');return ' ¦ '});
+  const A=new RegExp(`\\b(${NUTR_NAME})\\b\\s*(?:\\(g\\)|\\(mg\\))?\\s*[:=|–-]?\\s*(?:~|≈|approx\\.?\\s*|about\\s*)?${NUTR_NUM}\\s*${NUTR_UNIT}?(?![a-z])`,'gi');
+  const B=new RegExp(`(?:~|≈|approx\\.?\\s*)?${NUTR_NUM}\\s*${NUTR_UNIT}?\\s+(?:of\\s+)?(${NUTR_NAME})\\b`,'gi');
+  const runA=()=>{s=s.replace(A,(m,n,v,u)=>{const k=nutrKey(n,u);if(res[k]==null){put(k,v,u||(k==='kcal'?'kcal':''));return ' ¦ '}return m})};
+  const runB=()=>{s=s.replace(B,(m,v,u,n)=>{if(!u&&!/kcal|cal/i.test(n)&&!/\bg\b/.test(m))return m;const k=nutrKey(n,u);if(res[k]==null){put(k,v,u);return ' ¦ '}return m})};
+  if(new RegExp(`^\\s*[-•*]?\\s*(?:${NUTR_NAME})\\b`,'i').test(s)){runA();runB()}else{runB();runA()}
+  return res;
+}
+const isNutritionLine=l=>{const r=parseNutritionLine(l),n=Object.keys(r).length;if(!n)return false;
+  if(n>=2)return true;
+  return new RegExp(`^\\s*(?:per [a-z ]{1,20}:?\\s*)?(?:approx\\.?\\s*)?(?:${NUTR_NAME})\\b\\s*[:=|–-]?\\s*(?:~|≈|approx\\.?\\s*)?\\d`,'i').test(l)||/^\s*(?:~|≈|approx\.?\s*)?\d+(?:[.,]\d+)?\s*kcal\b/i.test(l)};
+function nutritionBasis(text){
+  const t=String(text||'').toLowerCase();
+  if(/\b(?:whole|entire|full) (?:recipe|batch|cake|loaf|tray|pan|bake)|\bper (?:recipe|batch|loaf|cake|tray)\b|\btotal (?:recipe|batch)\b|\bfor the (?:whole|entire|full)\b/.test(t))return {basis:'recipe',unit:''};
+  if(/\bper 100 ?g\b/.test(t))return {basis:'per100g',unit:''};
+  const m=t.match(/\bper (?:1 |one |each |a )?([a-z]+)/)||t.match(/\(\s*(?:1|one)\s+([a-z]+)\s*\)/);
+  if(m){const w=m[1];if(/^(serving|portion|person|piece)s?$/.test(w))return {basis:'serving',unit:/^piece/.test(w)?'piece':''};const u=unitSingular(w);if(new RegExp(`^(${SERVE_UNITS})$`).test(w)||new RegExp(`^(${SERVE_UNITS})$`).test(u))return {basis:'serving',unit:u}}
+  return {basis:'unknown',unit:''};
+}
+/** parseNutritionBlock(lines, heading) → structured nutrition or null */
+function parseNutritionBlock(lines,heading){
+  const values={},notes=[];
+  for(const l of lines){const r=parseNutritionLine(l);let got=0;for(const k in r)if(values[k]==null){values[k]=r[k];got++}
+    if(!Object.keys(r).length&&!/^(nutrient|amount|per (serving|bun|portion)|value)s?\b[\s|]*(amount|value|per)?/i.test(l))notes.push(l)}
+  if(!Object.keys(values).length)return null;
+  const b=nutritionBasis([heading,...lines].join(' '));
+  return {basis:b.basis,unitLabel:b.unit,values,note:notes.join(' '),source:'recipe',text:lines.join('\n')};
+}
+function nutritionLines(n){return NUTR_ORDER.filter(k=>n&&n.values&&n.values[k]!=null).map(k=>`${NUTR_LABEL[k]}: ${n.values[k].value}${n.values[k].unit?(n.values[k].unit==='kcal'||n.values[k].unit==='kJ'?' ':' ')+n.values[k].unit:''}`)}
+const nutritionBasisText=n=>!n?'':n.basis==='serving'?`Per ${n.unitLabel||'serving'}`:n.basis==='recipe'?'Whole recipe':n.basis==='per100g'?'Per 100 g':'Basis not stated';
+
+/* method helpers */
+const STEP_VERB=/^(preheat|heat|pre-heat|mix|add|stir|bake|combine|whisk|pour|fold|transfer|place|let|leave|remove|cool|divide|shape|roll|line|grease|spoon|sprinkle|brush|serve|cut|slice|melt|beat|cream|sift|knead|cover|return|top|spread|press|chill|refrigerate|freeze|store|use|make|prepare|put|set|allow|check|bring|reduce|simmer|blend|process|drizzle|garnish|decorate|repeat|turn|flip|wait|enjoy|insert|form|scoop|dust|gently|carefully|meanwhile|once|when|while|after|then|in|using|with|if|to|for|finally|next|first|start|begin|lightly|quickly|slowly|cook|boil|toast|warm|soak|dissolve|squeeze|grate|zest|chop|mash|crack|separate|fill|pipe|layer|arrange|wrap|unwrap|lift|tip|invert|tap|rest|bake|keep|thin|loosen|adjust|taste|season|smooth|level|swirl|marble|dip|coat|toss|crumble|mould|mold|spray|oil)\b/i;
+const STEP_NUM=/^(?:step\s*\d+\s*[:.)\-–—]?\s*|\d+\s*[.):\-–—]\s+|\d+\s*[.)]\s*(?=[A-Za-z])|[①-⑳]\s*|\d️?⃣\s*)/i;
+const isSubHeading=l=>{const c=l.replace(/[*_#]+/g,'').trim();return /^step\s*\d+\s*[:.]?$/i.test(c)||/^\d+\s*[.)]?$/.test(c)||(/:$/.test(c)&&c.split(/\s+/).length<=6&&!/\d/.test(c))||(isAllCaps(c)&&c.split(/\s+/).length<=6)||/^\*\*[^*]+\*\*:?$/.test(l.trim())||/^#{1,6}\s/.test(l.trim())};
+
 function analyzeRecipeLocal(text){
   const clean=cleanSocialText(normalizeRecipeInput(text));
   const L=clean.split('\n').map(x=>x.trim());
-  if(!L.some(l=>{const k=headKey(l);return k==='ingredients'||k==='method'}))return analyzeRecipeLegacy(clean);
-  const out={name:'',description:'',servings:null,servingsNote:'',yieldType:'',yieldQuantity:null,servingUnit:'',tempText:'',prepTime:'',cookTime:'',pan:'',
-    ingredients:[],instructions:[],storage:'',freezer:null,notes:'',dietaryTags:[],nutritionText:'',statusText:'',needsReview:[],sectionsFound:[]};
-  const noteParts=[]; let sec='start', group='', curNote='', nonEmptySeen=0;
+  const KV=/^([^:：]{2,40})[:：]\s*(.+)$/;
+  const lineKey=l=>{const h=headInfo(l);if(h)return h.key;const kv=l.match(KV);return kv?headKey(kv[1]):null};
+  const keys=L.map(lineKey);
+  const hasIngHead=keys.includes('ingredients'), hasMethodHead=keys.includes('method');
+  if(!hasIngHead&&!hasMethodHead&&!L.some(l=>looksLikeIngredient(l)))return analyzeRecipeLegacy(clean);
+  const out={name:'',description:'',categoryText:'',servings:null,servingsNote:'',servingsSource:'',yieldType:'',yieldQuantity:null,servingUnit:'',tempText:'',prepTime:'',cookTime:'',restTime:'',totalTime:'',pan:'',
+    ingredients:[],instructions:[],storage:'',freezer:null,notes:'',tips:[],dietaryTags:[],nutrition:null,nutritionText:'',statusText:'',needsReview:[],sectionsFound:[]};
+  const noteParts=[], nutLines=[], methodRaw=[], servCands=[]; let nutHead='';
+  let sec='start', group='', curNote='', implicitIng=false;
   const addNote=(title,line)=>{let n=noteParts.find(x=>x.title===title);if(!n){n={title,lines:[]};noteParts.push(n)}n.lines.push(line)};
+  const servCand=(v,src,strong)=>{const ex=explicitServings(v,{bare:src==='field'});if(ex){servCands.push({...ex,src,strong,text:v});return true}return false};
   const setMeta=(k,v)=>{v=v.trim();if(!v)return;
-    if(k==='servings'){const ex=explicitServings(v,{bare:true});const y=detectYield(v);if(ex){out.servings=ex.servings;if(ex.unit)out.servingUnit=ex.unit}else if(y){out.yieldType=y.yieldType;out.yieldQuantity=y.yieldQuantity}else out.needsReview.push(`Servings: ${v}`)}
+    if(k==='servings'){const y=detectYield(v);if(!servCand(v,'field',true)){if(y&&!out.yieldType){out.yieldType=y.yieldType;out.yieldQuantity=y.yieldQuantity}else out.needsReview.push(`Servings: ${v}`)}}
     else if(k==='pan'){out.pan=v;const y=detectYield(v);if(y&&!out.yieldType){out.yieldType=y.yieldType;out.yieldQuantity=y.yieldQuantity}}
-    else if(k==='oven')out.tempText=v;else if(k==='cook')out.cookTime=v;else if(k==='prep')out.prepTime=v};
+    else if(k==='oven')out.tempText=v;else if(k==='cook')out.cookTime=v;else if(k==='prep')out.prepTime=v;else if(k==='rest')out.restTime=v;else if(k==='total')out.totalTime=v;else if(k==='category')out.categoryText=v};
+  const metaInline=l=>{ // "Prep: 15 min | Cook: 25 min | Serves 6"
+    const parts=l.split(/\s+[|•·]\s+|\s{2,}/);if(parts.length<2)return false;let ok=0;
+    for(const p of parts){const kv=p.match(KV),k=kv&&headKey(kv[1]);if(k&&META_KEYS.includes(k))ok++;else if(/^(serves|makes|yield)\b/i.test(p)&&explicitServings(p))ok++}
+    if(ok!==parts.length)return false;
+    for(const p of parts){const kv=p.match(KV),k=kv&&headKey(kv[1]);if(k)setMeta(k,kv[2]);else servCand(p,'line',true)}return true};
+  const KEYLESS=/^(prep(?:aration)? time|cook(?:ing)? time|bak(?:e|ing) time|total time|rest(?:ing)? time|proof(?:ing)? time|chill(?:ing)? time|oven temp(?:erature)?|servings|category)\s+(.{1,40})$/i;
   for(let ix=0;ix<L.length;ix++){
-    const l=L[ix]; if(!l)continue; nonEmptySeen++;
+    const l=L[ix]; if(!l)continue;
+    if(sec==='start'&&out.name&&metaInline(l))continue;
+    // a heading on its own line
+    const hi=headInfo(l);
+    if(hi){
+      const hk=hi.key; out.sectionsFound.push(hk);
+      if(hi.extra){if(!servCand(hi.extra,'heading',true)&&hk==='nutrition')nutHead=hi.extra}
+      if(META_KEYS.includes(hk)){
+        // only take the next line as the value when it looks like one (short, not a heading, not a step)
+        if(sec==='method'&&!hi.extra&&/^(cook|total|rest|prep)$/.test(hk)){continue}
+        const nx=L[ix+1]||'';
+        if(hi.extra){setMeta(hk,hi.extra);continue}
+        if(nx&&!headInfo(nx)&&nx.length<=60&&!STEP_VERB.test(nx)){ix++;setMeta(hk,nx)}
+        continue}
+      if(hk==='nutrition')nutHead=l;
+      sec=hk;curNote=l.replace(/[:：]\s*$/,'').replace(/^[#*\s]+|[*\s]+$/g,'').trim();group=hi.group?hi.group.replace(/\b\w/g,c=>c.toUpperCase()):'';continue}
     // "Key: value" on one line
-    const kv=l.match(/^([^:：]{2,40})[:：]\s*(.+)$/);
-    if(kv){const k=headKey(kv[1]);if(k&&META_KEYS.includes(k)&&sec!=='ingredients'&&sec!=='method'||k&&META_KEYS.includes(k)&&!/^\d/.test(l)&&headKey(kv[1])){setMeta(k,kv[2]);out.sectionsFound.push(k);continue}
-      if(k&&!META_KEYS.includes(k)&&k!=='ingredients'&&k!=='method'){out.sectionsFound.push(k);if(sec!=='method'&&sec!=='ingredients'){sec=k;curNote=kv[1].trim()}routeLine(k,kv[2],kv[1].trim());continue}}
-    const hk=headKey(l);
-    if(hk){out.sectionsFound.push(hk);
-      if(META_KEYS.includes(hk)){let v=[];while(ix+1<L.length&&L[ix+1]&&!headKey(L[ix+1])&&v.length<1){v.push(L[++ix])}setMeta(hk,v.join(' '));continue}
-      sec=hk;curNote=l.replace(/[:：]\s*$/,'').trim();group='';continue}
-    // unknown ALL-CAPS line: a group heading inside ingredients, a sub-heading inside method, else an unknown section
-    if(isAllCaps(l)||/^[^.\d]{2,40}:$/.test(l)&&!QTY_FREE.test(l)){
-      const title=l.replace(/[:：]\s*$/,'').trim().toLowerCase().replace(/\b\w/g,c=>c.toUpperCase()).replace(/^For The /,'');
+    const kv=l.match(KV);
+    if(kv){const k=headKey(kv[1]);
+      if(k&&META_KEYS.includes(k)){
+        const inBody=sec==='ingredients'||sec==='method';
+        if(!inBody||(kv[2].length<=30&&/\d/.test(kv[2])&&!/^(bake|cook|baking|time)$/i.test(HEAD_CLEAN(kv[1])))){setMeta(k,kv[2]);out.sectionsFound.push(k);continue}
+      }else if(k==='nutrition'||(/^per\b/i.test(kv[1])&&isNutritionLine(kv[2]))){out.sectionsFound.push('nutrition');sec='nutrition';nutHead=kv[1];nutLines.push(kv[2]);continue}
+      else if(k&&k!=='ingredients'&&k!=='method'){out.sectionsFound.push(k);if(sec!=='method'&&sec!=='ingredients'){sec=k;curNote=kv[1].trim()}routeLine(k,kv[2],kv[1].trim());continue}
+      else if(k){sec=k;out.sectionsFound.push(k);routeLine(k,kv[2],'');continue}}
+    {const m=l.match(KEYLESS);if(m&&sec!=='method'&&sec!=='ingredients'){const k=headKey(m[1]);if(k&&META_KEYS.includes(k)&&(/\d/.test(m[2])||k==='category')){setMeta(k,m[2]);continue}}}
+    // nutrition figures without a heading end the method
+    if(sec!=='ingredients'&&sec!=='nutrition'&&isNutritionLine(l)){sec='nutrition';out.sectionsFound.push('nutrition');nutLines.push(l);continue}
+    if(sec==='ingredients'&&isNutritionLine(l)&&Object.keys(parseNutritionLine(l)).length>=2){sec='nutrition';nutLines.push(l);continue}
+    // unknown heading-like line
+    if((isAllCaps(l)||/^[^.\d]{2,40}:$/.test(l)||/^\*\*[^*]{2,40}\*\*:?$/.test(l)||/^#{1,4}\s+\S/.test(l))&&!(QTY_FREE.test(l)&&!/^optional\b/i.test(l))){
+      const raw=l.replace(/^[#\s]+|[*]+/g,'').replace(/[:：]\s*$/,'').trim();
+      const title=raw.toLowerCase().replace(/\b\w/g,c=>c.toUpperCase()).replace(/^For The /,'');
       if(sec==='ingredients'){group=title;continue}
-      if(sec==='method')continue;
-      if(sec==='start'&&!out.name){out.name=prettyTitle(l.replace(/[:：]\s*$/,''));continue}
+      if(sec==='method'){ // a sub-heading inside the method — or the start of something new?
+        const nx=L.slice(ix+1).find(Boolean)||'';
+        if(STEP_VERB.test(nx.replace(STEP_NUM,''))||STEP_NUM.test(nx))continue;
+        sec='unknown';curNote=title;continue}
+      if(sec==='start'&&!out.name){out.name=prettyTitle(raw);continue}
+      if(sec==='start'&&!hasIngHead&&looksLikeIngredient(L.slice(ix+1).find(Boolean)||'')){sec='ingredients';implicitIng=true;group=title;continue}
       sec='unknown';curNote=title;continue;
     }
-    routeLine(sec,l,curNote);
+    routeLine(sec,l,curNote,ix);
   }
-  function routeLine(k,l,title){
+  function routeLine(k,l,title,ix){
     l=l.replace(/^[-•*·▪]\s*/,'').trim(); if(!l)return;
     switch(k){
       case 'start':
-        if(!out.name){out.name=prettyTitle(l.replace(/^#+\s*/,''));return}
-        if(/^(makes|yield|yields|serves)\b/i.test(l)){setMeta('servings',l);if(!out.servings&&!out.yieldType)out.needsReview.push(l);return}
-        if(isTagLine(l)){out.dietaryTags.push(...l.split(/\s*[•·|,\/]\s*/).map(x=>x.trim()).filter(Boolean));return}
-        { const ex=explicitServings(l);if(ex&&l.length<40){out.servings=ex.servings;if(ex.unit)out.servingUnit=ex.unit;return} }
-        if(!out.description&&l.length>25){out.description=l;return}
-        if(out.description&&l.length>25&&!looksLikeIngredient(l)){out.description+=' '+l;return}
+        if(!out.name){out.name=prettyTitle(l.replace(/^#+\s*/,'').replace(/\*+/g,'').trim());return}
+        if(/^(makes|yield|yields|serves)\b/i.test(l)&&l.length<160){const sn=l.split(/(?<=[.!])\s+/);if(sn.length>1&&explicitServings(sn[0])){servCand(sn[0],'line',true);const rest=sn.slice(1).join(' ');out.description=(out.description?out.description+' ':'')+rest;return}if(!servCand(l,'line',true)){const y=detectYield(l);if(y&&!out.yieldType){out.yieldType=y.yieldType;out.yieldQuantity=y.yieldQuantity}else out.needsReview.push(l)}return}
+        if(isTagLine(l)){out.dietaryTags.push(...splitTags(l));return}
+        if(explicitServings(l)&&l.length<40){servCand(l,'line',true);return}
+        if(!hasIngHead&&looksLikeIngredient(l)){sec='ingredients';implicitIng=true;out.ingredients.push(parseIngredientLine(l,group));return}
+        if(!out.description&&l.length>25){out.description=l;servCand(l,'description',false);return}
+        if(out.description&&l.length>25&&!looksLikeIngredient(l)){out.description+=' '+l;servCand(l,'description',false);return}
         out.needsReview.push(l);return;
-      case 'ingredients':out.ingredients.push(parseIngredientLine(l,group));return;
-      case 'method':{const st=l.replace(/^(step\s*)?\d+[.):]\s*/i,'').trim();if(st)out.instructions.push(st);return}
-      case 'tags':out.dietaryTags.push(...l.split(/\s*[•·|,\/]\s*/).map(x=>x.trim()).filter(Boolean));return;
-      case 'nutrition':out.nutritionText+=(out.nutritionText?'\n':'')+l;return;
-      case 'storage':out.storage+=(out.storage?' ':'')+l;if(/freez/i.test(l))out.freezer=!/not|don.?t|do not/i.test(l);return;
+      case 'description':out.description+=(out.description?' ':'')+l;servCand(l,'description',false);return;
+      case 'ingredients':{
+        const words=l.split(/\s+/).length, p=parseLine(l), hasQty=p&&p.amount;
+        // a numbered or clearly instructional line after the list = the method started without a heading
+        if(!hasMethodHead&&(STEP_NUM.test(l)&&!hasQty&&/[a-z]{3}/i.test(l.replace(STEP_NUM,''))&&words>=4||(!hasQty&&STEP_VERB.test(l)&&words>=6))){sec='method';methodRaw.push(l);return}
+        if(/^(note|tip)s?\s*[:\-–]/i.test(l)){if(/^tip/i.test(l))out.tips.push(l.replace(/^tips?\s*[:\-–]\s*/i,''));else addNote('Ingredient notes',l.replace(/^notes?\s*[:\-–]\s*/i,''));return}
+        if(!hasQty&&words>=7&&/[.!]$/.test(l)&&!QTY_FREE.test(l)){addNote('Ingredient notes',l);return}
+        out.ingredients.push(parseIngredientLine(l,group));return}
+      case 'method':if(/^(makes|serves|yields?)\b/i.test(l)&&l.length<50&&explicitServings(l)){servCand(l.replace(/\.$/,''),'line',true);return}methodRaw.push(l);return;
+      case 'tags':
+        if(isTagLine(l)||DIET_WORD.test(l.split(/[\s(]/).slice(0,2).join(' '))&&l.split(/\s+/).length<=12){out.dietaryTags.push(...(isTagLine(l)?splitTags(l):[l.replace(/\.$/,'')]));return}
+        addNote(title||'Dietary information',l);return;
+      case 'nutrition':nutLines.push(l);return;
+      case 'storage':out.storage+=(out.storage?' ':'')+l;if(/freez/i.test(l))out.freezer=!/\b(not|don.?t|do not|doesn.?t|isn.?t)\b[^.]{0,20}freez/i.test(l);return;
       case 'status':out.statusText+=(out.statusText?' ':'')+l;return;
+      case 'tips':out.tips.push(l.charAt(0).toUpperCase()+l.slice(1));return;
       case 'notes':addNote(title||'Notes',l);return;
       default:out.needsReview.push(l);
     }
   }
-  out.dietaryTags=[...new Set(out.dietaryTags)];
+  // ---- method: drop sub-headings, strip numbering, re-join wrapped lines, move tips/notes out ----
+  for(const raw of methodRaw){
+    if(isSubHeading(raw))continue;
+    let st=raw.replace(STEP_NUM,'').replace(/^[*_]+|[*_]+$/g,'').trim(); if(!st)continue;
+    if(/^tips?\s*[:\-–]/i.test(st)){const t=st.replace(/^tips?\s*[:\-–]\s*/i,'');out.tips.push(t.charAt(0).toUpperCase()+t.slice(1));continue}
+    if(/^notes?\s*[:\-–]/i.test(st)){addNote('Method notes',st.replace(/^notes?\s*[:\-–]\s*/i,''));continue}
+    const prev=out.instructions[out.instructions.length-1];
+    if(prev&&!STEP_NUM.test(raw)&&!/[.!?)]$/.test(prev)&&/^[a-z(]/.test(st)){out.instructions[out.instructions.length-1]=prev+' '+st;continue}
+    out.instructions.push(st);
+  }
+  // ---- nutrition ----
+  if(nutLines.length){out.nutritionText=nutLines.join('\n');out.nutrition=parseNutritionBlock(nutLines,nutHead)}
+  // ---- servings: explicit statements anywhere; ask only when missing or contradictory ----
+  const strong=servCands.filter(c=>c.strong), pick=strong[0]||servCands[0];
+  if(pick){out.servings=pick.servings;out.servingUnit=pick.unit||'';out.servingsSource=pick.text;
+    const other=strong.find(c=>c.servings!==pick.servings);
+    if(other){out.servingsConflict=`The recipe says “${pick.text}” and “${other.text}”.`;out.needsReview.unshift(`Servings: “${pick.text}” vs “${other.text}” — which is right?`)}}
+  if(!out.servingUnit&&out.nutrition&&out.nutrition.basis==='serving'&&out.nutrition.unitLabel)out.servingUnit=out.nutrition.unitLabel;
+  if(!out.servings){
+    const m=out.instructions.join(' ').match(new RegExp(`\\b(?:divide|split|cut|portion|shape|scoop)[^.]{0,40}?\\b(?:into\\s+)?(\\d+)\\s+(?:equal\\s+|even\\s+)?(${SERVE_UNITS}|buns?|balls?|pieces?|portions?)`,'i'));
+    if(m)out.servingsHint=`The method divides it into ${m[1]} ${m[2]} — is that ${m[1]} servings?`,out.servingsSuggest=+m[1];
+  }
+  out.dietaryTags=[...new Set(out.dietaryTags.map(t=>t.trim()).filter(Boolean))];
   out.notes=noteParts.map(n=>`${n.title}:\n${n.lines.join('\n')}`).join('\n\n');
   if(!out.tempText){const t=out.instructions.join(' ').match(/(\d{3})\s*°?\s*([CF])\b/);if(t)out.tempText=`${t[1]}°${t[2].toUpperCase()}`}
-  if(!out.cookTime){const m=out.instructions.join(' ').match(/(\d+)\s*(?:(?:–|-|to)\s*(\d+)\s*)?min/i);if(m)out.cookTime=m[2]?`${m[1]}–${m[2]} min`:`${m[1]} min`}
+  if(!out.cookTime){const m=out.instructions.join(' ').match(/(?:bake|cook)[^.]{0,30}?(\d+)\s*(?:(?:–|-|to)\s*(\d+)\s*)?min/i);if(m)out.cookTime=m[2]?`${m[1]}–${m[2]} min`:`${m[1]} min`}
   if(!out.servings)out.servingsNote=out.yieldType?`Serving count needed — the recipe makes ${out.yieldType==='cake layers'?'a '+out.yieldQuantity+'-layer cake':out.yieldQuantity+' '+out.yieldType}, which isn't the number of servings.`:"Servings weren't included in the recipe.";
-  out.confidence={title:out.name?'medium':'low',ingredients:out.ingredients.length?'high':'low',instructions:out.instructions.length?'high':'low'};
+  out.sectionsFound=[...new Set(out.sectionsFound)];
+  out.confidence={title:out.name?'high':'low',ingredients:out.ingredients.length?(hasIngHead?'high':'medium'):'low',instructions:out.instructions.length?(hasMethodHead?'high':'medium'):'low'};
+  out.parserVersion=2;
   return out;
 }
+/** Is the deterministic read good enough that AI isn't needed? */
+/** mergeAIParse(local, ai, text) — AI fills gaps in an ambiguous paste, but every figure must exist in the original text.
+    Deterministic results win for servings, nutrition, tips, storage and times. */
+function mergeAIParse(local,ai,text){
+  const src=String(text||'').toLowerCase().replace(/,/g,'.');
+  const inText=v=>{const d=String(v||'').match(/\d+(?:[.,]\d+)?/g);return !d||d.every(x=>src.includes(x.replace(',','.')))};
+  const r={...ai};
+  r.ingredients=(ai.ingredients||[]).map(i=>inText(i.amount)?i:{...i,amount:'',needsReview:true});
+  if(local&&local.ingredients.length>r.ingredients.length&&local.confidence.ingredients==='high')r.ingredients=local.ingredients;
+  const tips=[];
+  r.instructions=(ai.instructions||[]).map(x=>String(x).replace(STEP_NUM,'').trim()).filter(x=>{if(!x||headInfo(x)||isNutritionLine(x))return false;if(/^tips?\s*[:\-–]/i.test(x)){tips.push(x.replace(/^tips?\s*[:\-–]\s*/i,''));return false}return true});
+  if(local&&local.instructions.length&&local.confidence.instructions==='high'&&local.instructions.length>=r.instructions.length)r.instructions=local.instructions;
+  const L=local||{};
+  r.nutrition=L.nutrition||(ai.nutritionText?parseNutritionBlock(String(ai.nutritionText).split('\n').filter(inText),''):null);
+  r.nutritionText=L.nutritionText||(r.nutrition?ai.nutritionText:'');
+  if(L.servings){r.servings=L.servings;r.servingUnit=L.servingUnit;r.servingsSource=L.servingsSource;r.servingsConflict=L.servingsConflict}
+  else if(r.servings){const ok=text.split('\n').some(l=>{const e=explicitServings(l);return e&&e.servings===r.servings});if(!ok){r.servingsSuggest=r.servings;r.servings=null}}
+  for(const k of ['tips','storage','restTime','totalTime','categoryText','prepTime','cookTime','tempText','pan','description'])if(L[k]&&(!Array.isArray(L[k])||L[k].length))r[k]=L[k];
+  r.tips=[...(r.tips||[]),...tips];
+  if((L.dietaryTags||[]).length)r.dietaryTags=L.dietaryTags;
+  r.needsReview=[...new Set([...(L.servingsConflict?L.needsReview.filter(x=>/^Servings: “/.test(x)):[]),...(ai.needsReview||[])])];
+  r.parserVersion=2;r.confidence=ai.confidence||{};
+  return r;
+}
+function parseIsConfident(r){return !!r&&r.parserVersion===2&&r.ingredients.length>0&&r.instructions.length>0&&r.confidence.ingredients==='high'&&r.confidence.instructions==='high'&&(r.needsReview||[]).length<=1}
 function analyzeRecipeLegacy(clean){
   const raw=String(clean).split('\n').map(s=>s.trim());
   const L=raw.filter(Boolean);
@@ -2796,6 +2991,61 @@ const AIRecipeLayer={
     return {results:[],notes,provider:'none'};
   }
 };
+/* =====================================================================
+   SCREENSHOT READER — readRecipeFromScreenshots()
+   OpenAI (your server) → Claude (inside Claude) → Mock (demo only, labelled)
+   All screenshots go in ONE request, in the order shown, as ONE recipe.
+   ===================================================================== */
+const SCREENSHOT_PROMPT=`These images are sequential screenshots of ONE recipe, in order. Read all images together and reconstruct the complete recipe. Information may overlap between screenshots — remove duplicate text caused by overlapping screenshots (but "2 eggs" and "2 egg whites" are different ingredients).
+This is recipe reconstruction, not just OCR: join ingredients and steps that are split across screenshots, keep section names (e.g. "Frosting") as the ingredient group, and ignore social-media text (likes, comments, usernames, hashtags, buttons).
+NEVER invent anything. If a quantity, unit or step is cut off or unreadable, use null and set needsReview true for that item. Do not guess amounts.
+Servings only when explicitly stated ("Serves 12", "Makes 16 slices"); layers or pans are not servings.
+Dietary words in the image are the creator's claims — copy them into dietaryClaims exactly; do not judge them.`;
+const dedupeLines=(arr,key)=>{const out=[];for(const x of arr){const k=key(x);if(!k)continue;const dup=out.findIndex(y=>{const ky=key(y);return ky===k||(k.length>=15&&ky.length>=15&&(ky.startsWith(k)||k.startsWith(ky)))});if(dup<0)out.push(x);else if(key(x).length>key(out[dup]).length)out[dup]=x}return out};
+/** OpenAI/Claude screenshot JSON → the app's existing recipe shape (+ review flags) */
+function screenshotResultToFound(j,engine){
+  j={...j,title:j.title||j.name||'',temperature:typeof j.temperature==='string'?{celsius:null,fahrenheit:null,text:j.temperature}:j.temperature};
+  const lowSteps=j.confidence&&j.confidence.instructions==='low';
+  const ingKey=i=>`${String(i.amount??'').trim()} ${String(i.unit||'').trim()} ${canonicalIngredient(i.name||'').key} ${String(i.notes||'').toLowerCase()}`.replace(/\s+/g,' ').trim();
+  const ings=dedupeLines((j.ingredients||[]).filter(i=>i&&i.name),ingKey).map(i=>({id:uid(),group:String(i.group||''),amount:i.amount==null?'':String(i.amount),unit:i.unit==null?'':String(i.unit),
+    name:[String(i.name).trim(),i.notes?String(i.notes).trim():''].filter(Boolean).join(', '),optional:!!i.optional,needsReview:!!i.needsReview||(i.amount==null&&!QTY_FREE.test(`${i.name} ${i.notes||''}`))}));
+  const stepsRaw=(j.instructions||[]).map((x,ix)=>typeof x==='string'?{step:ix+1,text:x,needsReview:false}:x).filter(x=>x&&x.text).sort((a,b)=>(a.step||0)-(b.step||0));
+  const steps=dedupeLines(stepsRaw,x=>String(x.text).toLowerCase().replace(/^\s*(step\s*)?\d+[.):]\s*/,'').replace(/\s+/g,' ').trim());
+  const t=j.temperature||{}, temp=t.text||[t.celsius?`${t.celsius}°C`:'',t.fahrenheit?`${t.fahrenheit}°F`:''].filter(Boolean).join(' / ');
+  const src=j.source||{};
+  return {name:String(j.title||'').trim(),description:String(j.description||''),servings:num(j.servings)||null,servingUnit:String(j.servingUnit||''),servingsNote:num(j.servings)?'':"Servings weren't shown in the screenshots.",
+    yieldType:'',yieldQuantity:null,prepTime:j.prepTimeMinutes?`${j.prepTimeMinutes} min`:'',cookTime:j.cookTimeMinutes?`${j.cookTimeMinutes} min`:'',tempText:temp,pan:'',
+    ingredients:ings,instructions:steps.map(x=>String(x.text).replace(/^\s*(step\s*)?\d+[.):]\s*/i,'').trim()),instructionReview:steps.map(x=>!!x.needsReview),
+    dietaryTags:(j.dietaryClaims||[]).map(String),dietaryAreClaims:true,notes:'',nutritionText:'',statusText:'',storage:'',freezer:null,
+    needsReview:[...(j.reviewNotes||[]).map(String)],overallReview:!!j.needsReview,sourceCreator:src.creator||'',sourcePlatform:src.platform||'',engine,
+    confidence:{title:j.title?'high':'low',ingredients:ings.some(i=>i.needsReview)?'medium':'high',instructions:lowSteps?'low':steps.some(x=>x.needsReview)?'medium':'high'}};
+}
+async function readRecipeFromScreenshotsOpenAI(photos,opts){
+  const j=await OpenAIRecipeService.call('/api/recipes/read-screenshots',{images:photos},{...opts,timeout:90000});
+  if(!j||!j.recipe)throw {code:'invalid_json'};
+  return screenshotResultToFound(j.recipe,'openai');
+}
+async function readRecipeFromScreenshotsClaude(photos,opts){
+  const s=await getSample();if(!s)throw {code:'unavailable'};
+  const j=await s.json(`${SCREENSHOT_PROMPT}
+Reply with only JSON: {"title":string,"description":string,"servings":number|null,"servingUnit":string,"ingredients":[{"group":string,"name":string,"amount":string|null,"unit":string|null,"notes":string,"needsReview":boolean}],"instructions":[{"step":number,"text":string,"needsReview":boolean}],"prepTimeMinutes":number|null,"cookTimeMinutes":number|null,"temperature":{"celsius":number|null,"fahrenheit":number|null},"dietaryClaims":[string],"source":{"creator":string|null,"platform":string|null},"needsReview":boolean,"reviewNotes":[string]}`,{images:photos.map(dataURLtoBlob),signal:opts&&opts.signal,onText:opts&&opts.onText,cache:false});
+  return screenshotResultToFound(j,'claude');
+}
+/** DEMO ONLY — never reads your images. Labelled everywhere it appears. */
+function readRecipeFromScreenshotsMock(photos){
+  return screenshotResultToFound({title:'Demo: Blueberry Oat Muffins',description:'Sample data — connect your AI server to read your own screenshots.',servings:12,servingUnit:'muffin',
+    ingredients:[{group:'',name:'rolled oats',amount:'200',unit:'g',notes:'',needsReview:false},{group:'',name:'banana',amount:'2',unit:'',notes:'mashed',needsReview:false},{group:'',name:'egg',amount:'2',unit:'',notes:'',needsReview:false},{group:'',name:'almond flour',amount:null,unit:null,notes:'',needsReview:true},{group:'',name:'baking powder',amount:'2',unit:'tsp',notes:'',needsReview:false},{group:'',name:'blueberries',amount:'150',unit:'g',notes:'',needsReview:false}],
+    instructions:[{step:1,text:'Heat the oven to 180°C and line a muffin tin.',needsReview:false},{step:2,text:'Blend the oats into flour, then mix with the remaining dry ingredients.',needsReview:false},{step:3,text:'Whisk the banana and eggs, combine and fold in the blueberries.',needsReview:false},{step:4,text:'Bake 20–22 minutes.',needsReview:false}],
+    prepTimeMinutes:10,cookTimeMinutes:22,temperature:{celsius:180,fahrenheit:null},dietaryClaims:['gluten-free'],source:{creator:null,platform:null},needsReview:true,reviewNotes:[`Demo data — ${photos.length} screenshot${photos.length===1?' was':'s were'} not actually read.`]},'mock');
+}
+/** readRecipeFromScreenshots — the one entry point the UI uses */
+async function readRecipeFromScreenshots(photos,opts={}){
+  if(OpenAIRecipeService.configured())return readRecipeFromScreenshotsOpenAI(photos,opts);
+  if(await ClaudeEngine.canReadImages())return readRecipeFromScreenshotsClaude(photos,opts);
+  if(DB.preferences.aiDemo!==false)return readRecipeFromScreenshotsMock(photos);
+  throw {code:'no_reader'};
+}
+const screenshotReaderMode=()=>OpenAIRecipeService.configured()?'openai':(typeof ui!=='undefined'&&ui.aiImages)?'claude':DB.preferences.aiDemo!==false?'mock':'none';
 /** "Use what I have instead" — local substitution rules first, AI second; the answer must be a real pantry item */
 async function pantrySubstituteFor(ing,recipe,params){
   const local=findDiscoverySub(ing.name,params.required)||(()=>{const m=matchRecipeIngredientToPantry(ing,{reqs:params.required});return m&&m.level==='possible'?{product:m.product,label:`Use your ${m.product.productName.toLowerCase()} — ${m.note}`}:null})();
@@ -2943,20 +3193,21 @@ Rules:
 - Ignore social-media text: usernames, likes, comments, Follow/Share/Save buttons, hashtags, "link in bio", "tag someone", sponsored labels.
 - Copy quantities exactly as written. Do not convert, guess or invent anything. If something isn't shown, leave it empty or null.
 - Section headings inside the ingredient list (e.g. "CAKE", "MAPLE CREAM CHEESE FROSTING") are groups, NOT ingredients — put them in "group".
-- Only real preparation/cooking actions go in instructions. Metadata (servings, pan, oven, time, dietary tags), nutrition, notes, status and test notes must NOT become steps — put them in their own fields.
+- Only real preparation/cooking actions go in instructions. Metadata (servings, pan, oven, time, dietary tags), nutrition, baking tips, storage, notes, status and test notes must NOT become steps — put them in their own fields. The method ends at the next heading such as "Estimated Nutrition Per Bun", "Baking Tips", "Storage" or "Recipe Notes".
+- nutritionText: copy the recipe's own nutrition lines exactly (one per line) — never calculate or estimate it. Put anything you cannot place in needsReview.
 - Quantity-free items like "cinnamon for topping" or "salt to taste" are fine: leave amount empty.
 - Servings: ONLY an explicit statement counts ("Serves 12", "12 servings", "Makes 16 slices", "Yield: 12 muffins"). Layers, pans, tins, loaves or baking sheets ("3-layer cake", "2 loaves") are the YIELD, never servings — put them in yieldType/yieldQuantity and use null for servings. servingUnit is what one portion is (slice, muffin, cookie, bar, cup, portion) when stated. If there is no method, use an empty instructions list.
 - Keep section names like "Crust" or "Filling" in "group". One instruction step per string, without step numbers.
 - Rate how sure you are about the title, ingredients and instructions: "high", "medium" or "low" ("low" also when parts are cut off or hard to read).
 - List what is missing in "missing" (e.g. "method", "servings", "oven temperature", "some quantities").
 ${url?`Source link (for reference only, you cannot open it): ${url}\n`:''}${text?`RECIPE TEXT:\n${text.slice(0,12000)}\n`:''}
-Reply with only JSON in this shape: ${RECIPE_SHAPE.slice(0,-1)},"yieldType":string,"yieldQuantity":number|null,"servingUnit":string,"pan":string,"dietaryTags":[string],"nutritionText":string,"notes":string,"statusText":string,"needsReview":[string],"confidence":{"title":"high"|"medium"|"low","ingredients":"high"|"medium"|"low","instructions":"high"|"medium"|"low"},"missing":[string],"sourceApp":"instagram"|"tiktok"|"pinterest"|"other"|null}`;
+Reply with only JSON in this shape: ${RECIPE_SHAPE.slice(0,-1)},"yieldType":string,"yieldQuantity":number|null,"servingUnit":string,"pan":string,"dietaryTags":[string],"nutritionText":string,"tips":[string],"storage":string,"restTime":string,"categoryText":string,"notes":string,"statusText":string,"needsReview":[string],"confidence":{"title":"high"|"medium"|"low","ingredients":"high"|"medium"|"low","instructions":"high"|"medium"|"low"},"missing":[string],"sourceApp":"instagram"|"tiktok"|"pinterest"|"other"|null}`;
     const o={signal:opts.signal,onText:opts.onText};
     if(n)o.images=photos.map(dataURLtoBlob);
     const j=await s.json(prompt,o);
     const r=normRecipe(j);
     r.confidence=j.confidence||{};r.missing=Array.isArray(j.missing)?j.missing.map(String):[];r.sourceApp=j.sourceApp||null;
-    r.pan=String(j.pan||'');r.dietaryTags=Array.isArray(j.dietaryTags)?j.dietaryTags.map(String):[];r.nutritionText=String(j.nutritionText||'');r.notes=String(j.notes||'');r.statusText=String(j.statusText||'');r.needsReview=Array.isArray(j.needsReview)?j.needsReview.map(String):[];
+    r.pan=String(j.pan||'');r.dietaryTags=Array.isArray(j.dietaryTags)?j.dietaryTags.map(String):[];r.nutritionText=String(j.nutritionText||'');r.notes=String(j.notes||'');r.statusText=String(j.statusText||'');r.needsReview=Array.isArray(j.needsReview)?j.needsReview.map(String):[];r.tips=Array.isArray(j.tips)?j.tips.map(String).filter(Boolean):[];r.storage=String(j.storage||'');r.restTime=String(j.restTime||'');r.categoryText=String(j.categoryText||'');
     r.yieldType=String(j.yieldType||'');r.yieldQuantity=num(j.yieldQuantity)||null;r.servingUnit=String(j.servingUnit||'');
     // safety net: a serving count equal to the number of layers/pans with no explicit statement is not trusted
     const ex=explicitServings(text||''),yl=detectYield(text||'');if(yl&&r.servings===yl.yieldQuantity&&!ex){r.servings=null}
@@ -3497,7 +3748,7 @@ function screenRecipe(){
   ${fold('My test notes',lastNote?`${lastNote.worked?`<div class="kv"><b>What worked</b><span>${esc(lastNote.worked)}</span></div>`:''}${lastNote.didnt?`<div class="kv"><b>What didn't</b><span>${esc(lastNote.didnt)}</span></div>`:''}${lastNote.change?`<div class="kv"><b>Change next time</b><span>${esc(lastNote.change)}</span></div>`:''}`:'<p class="sub">Notes from your latest test show up here.</p>')}
   ${fold('Test history',testsHTML(r),r.tests.length||'')}
   ${fold('Versions',r.versions.slice().reverse().map(v=>`<div class="ver"><div><b>Version ${v.n}${v.n===r.currentVersion?' — current':''}</b>${v.id===r.perfectVersionId?`<span class="perfect sm">${I.star} Perfect Version</span>`:''}<small>${v.source==='claude'?'Claude (AI)':v.source==='rules'?'Built-in rules':v.source==='revision'?'Improved from a test':v.source==='rescue'?'Recipe Rescue':v.source==='experiment'?`Copy of version ${v.basedOn} to experiment`:'Made by me'} — ${new Date(v.createdAt).toLocaleDateString(undefined,{day:'numeric',month:'short'})}${v.changes&&v.changes.length?` — ${v.changes.length} changes`:''}</small></div>${v.n!==r.currentVersion?`<button class="btn btn-ghost" style="width:auto;min-height:46px;font-size:15px" data-act="use-version" data-id="${r.id}" data-v="${v.n}">Use this</button>`:''}</div>`).join(''),r.versions.length)}
-  ${r.importNotes||r.recipeNutritionText||(r.dietaryTags||[]).length||r.pan?fold('From the recipe',`${(r.dietaryTags||[]).length?`<div class="kv"><b>Dietary (as written)</b><span>${esc(r.dietaryTags.join(' • '))}</span></div>`:''}${r.pan?`<div class="kv"><b>Pan</b><span>${esc(r.pan)}</span></div>`:''}${r.importNotes?`<div class="kv"><b>Notes</b><span class="pre">${esc(r.importNotes)}</span></div>`:''}${r.recipeNutritionText?`<div class="kv"><b>Nutrition (recipe's own estimate)</b><span class="pre">${esc(r.recipeNutritionText)}</span></div>`:''}${r.recipeStatusText?`<div class="kv"><b>Status</b><span>${esc(r.recipeStatusText)}</span></div>`:''}`):''}
+  ${r.importNotes||r.recipeNutritionText||r.recipeNutrition||(r.bakingTips||[]).length||(r.dietaryTags||[]).length||r.pan||r.restTime||r.recipeCategoryText?fold('From the recipe',`${r.recipeCategoryText?`<div class="kv"><b>Category (as written)</b><span>${esc(r.recipeCategoryText)}</span></div>`:''}${r.restTime||r.totalTime?`<div class="kv"><b>Time</b><span>${esc([r.restTime&&'Rest '+r.restTime,r.totalTime&&'Total '+r.totalTime].filter(Boolean).join(' · '))}</span></div>`:''}${(r.dietaryTags||[]).length?`<div class="kv"><b>Dietary (as written)</b><span>${esc(r.dietaryTags.join(' • '))}</span></div>`:''}${r.pan?`<div class="kv"><b>Pan</b><span>${esc(r.pan)}</span></div>`:''}${(r.bakingTips||[]).length?`<div class="kv"><b>Baking tips</b><ul class="flist dot" style="margin:0">${r.bakingTips.map(t=>`<li>${esc(t)}</li>`).join('')}</ul></div>`:''}${r.importNotes?`<div class="kv"><b>Notes</b><span class="pre">${esc(r.importNotes)}</span></div>`:''}${r.recipeNutrition||r.recipeNutritionText?`<div class="kv"><b>Nutrition (recipe's own figures)</b><div>${recipeNutritionHTML(r.recipeNutrition,r.recipeNutritionText)}</div></div>`:''}${r.recipeStatusText?`<div class="kv"><b>Status</b><span>${esc(r.recipeStatusText)}</span></div>`:''}`):''}
   ${fold('Original recipe',(vs+raw)||'<p class="sub">Nothing saved from the original.</p>',O?'Preserved':'')}
   </section>
   <section class="stack">
@@ -3510,6 +3761,8 @@ function screenRecipe(){
 const WIZ_STAGES=['import','found','needs','result'];
 function wizBar(){const ix=WIZ_STAGES.indexOf(W.stage==='reading'?'import':W.stage==='working'?'needs':W.stage==='error'?(W.errBack||'import'):W.stage);return `<div class="wiz-steps" aria-hidden="true">${WIZ_STAGES.map((s,i)=>`<i class="${i<ix?'done':i===ix?'on':''}"></i>`).join('')}</div>`}
 function engineBadge(kind){
+  if(kind==='openai')return `<span class="engine ai">${I.spark} OpenAI (your server)</span>`;
+  if(kind==='mock')return `<span class="engine rules">🧪 Demo data — not read from your screenshots</span>`;
   const ai=kind==='claude'||(kind==null&&ui.aiReady&&DB.preferences.engine!=='rules');
   return `<span class="engine ${ai?'ai':'rules'}">${ai?I.spark+' Claude (AI)':I.layers+' Built-in rules — not AI'}</span>`;
 }
@@ -3525,9 +3778,8 @@ function wizImport(){
     body=`<section style="margin-top:22px"><h2>Your screenshots${W.photos.length?` (${W.photos.length})`:''}</h2>
     ${W.photos.length?`<div class="thumbs">${W.photos.map((p,ix)=>`<div><img src="${p}" alt="Screenshot ${ix+1}"><span class="tnum">${ix+1}</span><button data-act="wiz-photo-del" data-i="${ix}" aria-label="Remove screenshot ${ix+1}">${I.x}</button></div>`).join('')}</div>`:''}
     <button class="btn btn-ghost" style="margin-top:12px" data-act="wiz-photo-add">${I.plus} ${W.photos.length?'Add another screenshot':'Add screenshots'}</button>
-    ${ui.aiImages?`<p class="note g">All screenshots are read together as <b>one recipe</b> — photo, ingredients, method and details. You'll check everything before anything changes.</p>`
-    :`<p class="note y"><b>Reading screenshots needs Claude</b>, which isn't available here. Your screenshots are saved with the recipe as the source. Copy the text from them and paste it below.</p>
-    ${ocrTip}<label class="field"><span>Recipe text</span><textarea class="inp" rows="9" data-w="text" data-clean="recipe" placeholder="Paste the copied text here">${esc(W.text)}</textarea></label>${pasteBtn}`}</section>`;
+    ${W.photos.length?`<p class="sub" style="margin-top:10px">All ${W.photos.length===1?'':W.photos.length+' '}screenshot${W.photos.length===1?'':'s'} will be read together, in this order, as one recipe.</p>`:''}
+    ${screenshotReaderMode()==='mock'?`<p class="note y" style="margin-top:10px"><b>Demo mode:</b> your AI server isn't connected yet, so Read recipe shows a clearly marked sample. Add your server in Profile → Smart Recipe AI.</p>`:''}</section>`;
   }else if(m==='text'){
     body=`<section style="margin-top:22px"><h2>Paste the recipe</h2>${ocrTip}${pasteBtn}
     <label class="field"><span>Recipe text</span><small>Title, ingredients, method — likes, hashtags and usernames are ignored.</small><textarea class="inp" rows="12" data-w="text" data-clean="recipe" id="w-text" placeholder="Healthy Blueberry Muffins&#10;&#10;2 cups almond flour&#10;3 eggs&#10;…">${esc(W.text)}</textarea></label></section>`;
@@ -3547,16 +3799,19 @@ function wizImport(){
     <button class="opt" data-act="manual-start"><span class="ic p">${I.pen}</span><span>Enter manually<small>Full control</small></span></button>
   </div>
   ${body}
-  ${m?`<div class="footbar"><div class="footbar-in"><button class="btn btn-primary" data-act="wiz-read" id="w-read" ${wizCanRead()?'':'disabled'}>${I.spark} Read recipe</button></div></div>`:''}`;
+  ${m?`<div class="footbar"><div class="footbar-in"><button class="btn btn-primary" data-act="wiz-read" id="w-read" ${wizCanRead()&&!W.busy?'':'disabled'}>${W.busy?'Reading…':I.spark+' Read recipe'}</button></div></div>`:''}`;
 }
 function wizReading(){
-  return `${wizTop('Reading')}${wizBar()}<div class="working"><div class="whisker">${I.whisk}</div><h1 class="wtitle">Reading your recipe…</h1>
-  <p class="sub">Finding the name, servings, ingredients and steps.</p>${engineBadge(W.readingEngine)}
-  <div class="stream" id="w-stream" ${W.readingEngine==='claude'?'':'hidden'}>Thinking…</div>
-  ${W.readingEngine==='claude'?`<button class="btn btn-ghost" style="margin-top:22px" data-act="wiz-stop">${I.stop} Stop</button>`:''}</div>`;
+  const shots=W.readingEngine&&W.mode==='photos'&&W.photos.length;
+  const msgs=shots?['Reading your screenshots…','Finding the ingredients…','Putting the recipe together…','Checking for missing information…']:['Reading your recipe…'];
+  return `${wizTop('Reading')}${wizBar()}<div class="working"><div class="whisker">${I.whisk}</div><h1 class="wtitle" id="r-prog">${msgs[Math.min(W.readStep||0,msgs.length-1)]}</h1>
+  <p class="sub">${shots?`${W.photos.length} screenshot${W.photos.length===1?'':'s'}, read together as one recipe.`:'Finding the name, servings, ingredients and steps.'}</p>${engineBadge(W.readingEngine==='openai'?'claude':W.readingEngine)}
+  ${shots?`<div class="wsteps">${msgs.map((m2,i)=>`<div class="${i<(W.readStep||0)?'on':''}"><i>${i<(W.readStep||0)?I.check:''}</i>${m2.replace('…','')}</div>`).join('')}</div>`:''}
+  <div class="stream" id="w-stream" hidden></div>
+  ${W.readingEngine==='claude'||W.readingEngine==='openai'?`<button class="btn btn-ghost" style="margin-top:22px" data-act="wiz-stop">${I.stop} Stop</button>`:''}</div>`;
 }
 function wIngRow(i){
-  return `<div class="ingrow"><div class="top"><input class="inp" data-wing="${i.id}" data-f="amount" value="${esc(i.amount)}" placeholder="Amount" aria-label="Amount"><input class="inp" data-wing="${i.id}" data-f="unit" value="${esc(i.unit)}" placeholder="Unit" list="units" aria-label="Unit"><button class="delbtn" data-act="wing-del" data-v="${i.id}" aria-label="Remove ingredient">${I.trash}</button></div>
+  return `<div class="ingrow ${i.needsReview?'rev':''}">${i.needsReview?'<span class="flag">⚠ Check amount</span>':''}<div class="top"><input class="inp" data-wing="${i.id}" data-f="amount" value="${esc(i.amount)}" placeholder="Amount" aria-label="Amount"><input class="inp" data-wing="${i.id}" data-f="unit" value="${esc(i.unit)}" placeholder="Unit" list="units" aria-label="Unit"><button class="delbtn" data-act="wing-del" data-v="${i.id}" aria-label="Remove ingredient">${I.trash}</button></div>
   <input class="inp" data-wing="${i.id}" data-f="name" value="${esc(i.name)}" placeholder="Ingredient" aria-label="Ingredient name">
   <div class="meta"><input class="inp" data-wing="${i.id}" data-f="group" value="${esc(i.group)}" placeholder="Section (optional)" aria-label="Section"><label class="optlab"><input type="checkbox" data-wing="${i.id}" data-f="optional" ${i.optional?'checked':''}> Optional</label></div></div>`;
 }
@@ -3569,9 +3824,24 @@ function foundChecks(F){
   if(ings.length)c.push(noAmt.length?{s:'cannot_confirm',t:`${ings.length-noAmt.length} of ${ings.length} have quantities`,d:`No amount for: ${noAmt.map(i=>i.name).join(', ')}. Add them in Edit something if you know them.`}:{s:'met',t:'Quantities found'});
   c.push(steps.length?{s:low('instructions')?'cannot_confirm':'met',t:'Method found',d:low('instructions')?'I cannot confirm every step was readable.':''}:{s:'cannot_confirm',t:'Method not found',d:(W.mode==='photos'?'Add another screenshot if you have the instructions.':'Paste the instructions too if you have them.')+' I can still adapt the ingredients without it.',more:1});
   if(F.yieldType&&num(F.yieldQuantity))c.push({s:'met',t:`Makes ${yieldText(F)}`});
-  c.push(num(F.servings)?{s:'met',t:`Serves ${num(F.servings)}${F.servingUnit?` — 1 ${F.servingUnit} each`:''}`}:{s:'not_met',t:'Serving count needed',d:`${F.yieldType?`“${yieldText(F)}” is what the recipe makes, not how many portions. `:''}How many portions will you cut or divide it into? Nutrition per portion needs this.`,serv:1});
+  c.push(num(F.servings)&&!F.servingsConflict?{s:'met',t:`Serves ${num(F.servings)}${F.servingUnit?` — 1 ${F.servingUnit} each`:''}`,d:F.servingsSource?`From “${F.servingsSource}”.`:''}:F.servingsConflict?{s:'cannot_confirm',t:'Which serving count is right?',d:`${F.servingsConflict} Confirm the number below.`,serv:1}:{s:'not_met',t:'Serving count needed',d:`${F.yieldType?`“${yieldText(F)}” is what the recipe makes, not how many portions. `:''}How many portions will you cut or divide it into? Nutrition per portion needs this.`,serv:1});
   if(low('title'))c.push({s:'cannot_confirm',t:'Recipe name',d:'I cannot confirm this — check the name.'});
+  const rv=ings.filter(i=>i.needsReview).length+(F.instructionReview||[]).filter(Boolean).length;if(rv)c.push({s:'cannot_confirm',t:`${rv} item${rv===1?'':'s'} to check`,d:"Marked ⚠ below — part of the text was cut off or hard to read. Fix them with Edit something."});
   return {c,ready:ings.length>0&&!!num(F.servings),issues:c.filter(x=>x.s!=='met').length};
+}
+/** the recipe's OWN nutrition — always labelled, never mixed with Smart Treats' calculation */
+function recipeNutritionHTML(n,txt){
+  if(n&&n.values&&Object.keys(n.values).length)return `<p class="sub nsrc">${esc(nutritionBasisText(n))} · as written in the recipe — not calculated by Smart Treats</p><table class="ntab">${NUTR_ORDER.filter(k=>n.values[k]!=null).map(k=>`<tr><th>${NUTR_LABEL[k]}</th><td>${esc(String(n.values[k].value))}${n.values[k].unit?' '+esc(n.values[k].unit):''}</td></tr>`).join('')}</table>${n.note?`<small class="muted">${esc(n.note)}</small>`:''}`;
+  return txt?`<p class="sub nsrc">As written in the recipe — not calculated by Smart Treats</p><p class="pre">${esc(txt)}</p>`:'';
+}
+function foundExtras(F){
+  const b=[];
+  if(F.nutrition||F.nutritionText)b.push(`<div class="fx"><h3>Nutrition from the recipe</h3>${recipeNutritionHTML(F.nutrition,F.nutritionText)}</div>`);
+  if((F.dietaryTags||[]).length)b.push(`<div class="fx"><h3>Dietary</h3><div class="dtags">${F.dietaryTags.map(t=>`<span class="dtag">${esc(t)}</span>`).join('')}</div>${F.dietaryAreClaims?'<small class="muted">Claimed by the source — Smart Treats checks the actual ingredients itself.</small>':''}</div>`);
+  if((F.tips||[]).length)b.push(`<div class="fx"><h3>Baking tips</h3><ul class="flist dot">${F.tips.map(t=>`<li>${esc(t)}</li>`).join('')}</ul></div>`);
+  if(F.storage)b.push(`<div class="fx"><h3>Storage</h3><p>${esc(F.storage)}</p></div>`);
+  if(F.notes)b.push(`<div class="fx"><h3>Notes</h3><p class="pre">${esc(F.notes)}</p></div>`);
+  return b.length?`<section class="card fxs"><h2>Also in the recipe</h2><p class="sub" style="margin-top:4px">Kept separate from the method. Change anything with Edit something.</p>${b.join('')}</section>`:'';
 }
 function wizFound(){
   const F=W.found;
@@ -3583,26 +3853,30 @@ function wizFound(){
   <section class="card" style="margin-top:16px"><h2 class="rname" style="margin-top:0">${esc(F.name||'Untitled recipe')}</h2>
     ${F.description?`<p class="sub" style="margin-top:8px">${esc(F.description)}</p>`:''}
     <dl class="parsed">
-      <div><dt>Servings</dt><dd>${num(F.servings)?`${num(F.servings)}${F.servingUnit?' '+esc(F.servingUnit)+(num(F.servings)>1?'s':''):''}`:'<span class="flag">Needs review</span>'}</dd></div>
+      <div><dt>Servings</dt><dd>${num(F.servings)&&!F.servingsConflict?`${num(F.servings)}${F.servingUnit?' '+esc(F.servingUnit)+(num(F.servings)>1?'s':''):''}`:'<span class="flag">Needs review</span>'}</dd></div>
       ${F.yieldType?`<div><dt>Makes</dt><dd>${esc(yieldText(F))}</dd></div>`:''}
       ${F.pan?`<div><dt>Pan</dt><dd>${esc(F.pan)}</dd></div>`:''}
       ${F.tempText?`<div><dt>Oven</dt><dd>${esc(F.tempText)}</dd></div>`:''}
-      ${F.cookTime||F.prepTime?`<div><dt>Time</dt><dd>${esc([F.prepTime&&'Prep '+F.prepTime,F.cookTime].filter(Boolean).join(' · '))}</dd></div>`:''}
+      ${F.cookTime||F.prepTime||F.restTime?`<div><dt>Time</dt><dd>${esc([F.prepTime&&'Prep '+F.prepTime,F.restTime&&'Rest '+F.restTime,F.cookTime&&'Bake '+F.cookTime,F.totalTime&&'Total '+F.totalTime].filter(Boolean).join(' · '))}</dd></div>`:''}
+      ${F.categoryText?`<div><dt>Category</dt><dd>${esc(F.categoryText)}</dd></div>`:''}
       <div><dt>Ingredients</dt><dd>${F.ingredients.length} ingredient${F.ingredients.length===1?'':'s'}${[...new Set(F.ingredients.map(i=>i.group).filter(Boolean))].length?` in ${[...new Set(F.ingredients.map(i=>i.group).filter(Boolean))].map(esc).join(' + ')}`:''}</dd></div>
       <div><dt>Method</dt><dd>${F.instructions.length} step${F.instructions.length===1?'':'s'}</dd></div>
-      ${F.dietaryTags&&F.dietaryTags.length?`<div><dt>Dietary</dt><dd>${F.dietaryTags.map(esc).join(' • ')}</dd></div>`:''}
-      ${F.nutritionText?`<div><dt>Nutrition</dt><dd>Found — kept as the recipe's own estimate</dd></div>`:''}
-      ${F.notes?`<div><dt>Notes</dt><dd>Available</dd></div>`:''}
+      ${F.dietaryTags&&F.dietaryTags.length?`<div><dt>Dietary</dt><dd>${F.dietaryTags.map(esc).join(' • ')}${F.dietaryAreClaims?'<br><small class="muted">Claimed by the source — Smart Treats checks the actual ingredients itself.</small>':''}</dd></div>`:''}
+      ${F.sourceCreator||F.sourcePlatform?`<div><dt>Source</dt><dd>${esc([F.sourceCreator,F.sourcePlatform].filter(Boolean).join(' · '))}</dd></div>`:''}
+      ${F.nutrition||F.nutritionText?`<div><dt>Nutrition</dt><dd>${F.nutrition?`${Object.keys(F.nutrition.values).length} values · ${esc(nutritionBasisText(F.nutrition).toLowerCase())}`:'Found'} <small class="muted">(recipe's own)</small></dd></div>`:''}
+      ${(F.tips||[]).length?`<div><dt>Tips</dt><dd>${F.tips.length} baking tip${F.tips.length===1?'':'s'}</dd></div>`:''}
+      ${F.storage?`<div><dt>Storage</dt><dd>Found</dd></div>`:''}
+      ${F.notes?`<div><dt>Notes</dt><dd>Found</dd></div>`:''}
       ${F.statusText?`<div><dt>Status</dt><dd>${esc(F.statusText)}</dd></div>`:''}
     </dl></section>
-  ${F.needsReview&&F.needsReview.length?`<section class="card"><h2><span class="flag">Needs review</span></h2><p class="sub" style="margin-top:6px">I wasn't sure where these belong, so I didn't put them in the method:</p><ul class="flist">${F.needsReview.map(x=>`<li>${esc(x)}</li>`).join('')}</ul></section>`:''}
-  ${F.notes||F.nutritionText?`<section>${fold('Notes from the recipe',`${F.notes?`<p class="pre">${esc(F.notes)}</p>`:''}${F.nutritionText?`<div class="kv"><b>Nutrition (from the recipe)</b><span class="pre">${esc(F.nutritionText)}</span></div>`:''}`)}</section>`:''}
+  ${(F.needsReview||[]).filter(x=>!/^Servings: “/.test(x)).length?`<section class="card"><h2><span class="flag">Unclassified — needs review</span></h2><p class="sub" style="margin-top:6px">I wasn't sure where these belong, so I kept them out of the method. Move each one, or remove it:</p><div class="stack" style="margin-top:10px">${F.needsReview.map((x,i)=>/^Servings: “/.test(x)?'':`<div class="revitem"><p>${esc(x)}</p><div class="revbtns"><button data-act="wiz-rev" data-i="${i}" data-to="method">Method</button><button data-act="wiz-rev" data-i="${i}" data-to="ingredient">Ingredient</button><button data-act="wiz-rev" data-i="${i}" data-to="notes">Notes</button><button data-act="wiz-rev" data-i="${i}" data-to="description">Description</button><button data-act="wiz-rev" data-i="${i}" data-to="remove" aria-label="Remove">${I.trash}</button></div></div>`).join('')}</div></section>`:''}
+  ${foundExtras(F)}
   <section class="card"><h2>${Q.issues?'Almost ready':'Looks complete'}</h2>
     <div style="margin-top:6px">${Q.c.map(x=>`<div class="gl"><span class="ok s-${x.s}">${icon[x.s]}</span><div><b>${esc(x.t)}</b>${x.d?`<small>${esc(x.d)}</small>`:''}
-      ${x.serv?`<div class="servrow"><input class="inp" id="w-serv" data-wf="servings" inputmode="numeric" placeholder="e.g. 12" value="${esc(F.servings??'')}" aria-label="Servings"><span>servings</span></div>${F.servingsHint?`<small>${esc(F.servingsHint)}</small>`:''}`:''}
+      ${x.serv?`<div class="servrow"><input class="inp" id="w-serv" data-wf="servings" inputmode="numeric" placeholder="${F.servingsSuggest?esc(F.servingsSuggest):'e.g. 12'}" value="${esc(F.servings??'')}" aria-label="Servings"><span>servings</span></div>${F.servingsHint?`<small>${esc(F.servingsHint)}</small>`:''}`:''}
       ${x.more?`<button class="btn btn-ghost" style="margin-top:10px;min-height:48px" data-act="wiz-more">${I.plus} ${moreLabel}</button>`:''}</div></div>`).join('')}</div></section>
-  <section><h2>Ingredients</h2>${F.ingredients.length?groupIngs(F.ingredients).map(g=>`${g.k?`<p class="grp">${esc(g.k)}</p>`:''}<ul class="flist">${g.items.map(i=>`<li>${i.amount||i.unit?`<b>${esc([i.amount,i.unit].filter(Boolean).join(' '))}</b> `:''}${esc(i.name)}${i.optional?' <span class="muted">(optional)</span>':''}${!i.amount&&i.usage&&!/optional/.test(i.usage)?' <span class="muted">· no amount needed</span>':''}</li>`).join('')}</ul>`).join(''):'<p class="sub">None found.</p>'}</section>
-  <section><h2>Method</h2>${F.instructions.length?`<ol class="flist num">${F.instructions.map(x=>`<li>${esc(x)}</li>`).join('')}</ol>`:'<p class="sub">Method not found.</p>'}</section>
+  <section><h2>Ingredients</h2>${F.ingredients.length?groupIngs(F.ingredients).map(g=>`${g.k?`<p class="grp">${esc(g.k)}</p>`:''}<ul class="flist">${g.items.map(i=>`<li class="${i.needsReview?'rev':''}">${i.needsReview?'<span class="flag">⚠ Check amount</span> ':''}${i.amount||i.unit?`<b>${esc([i.amount,i.unit].filter(Boolean).join(' '))}</b> `:''}${esc(i.name)}${i.optional?' <span class="muted">(optional)</span>':''}${!i.amount&&i.usage&&!/optional/.test(i.usage)?' <span class="muted">· no amount needed</span>':''}</li>`).join('')}</ul>`).join(''):'<p class="sub">None found.</p>'}</section>
+  <section><h2>Method</h2>${F.instructions.length?`<ol class="flist num">${F.instructions.map((x,ix)=>`<li class="${(F.instructionReview||[])[ix]?'rev':''}"><span>${(F.instructionReview||[])[ix]?'<span class="flag">⚠ Check this step</span> ':''}${esc(x)}</span></li>`).join('')}</ol>`:'<p class="sub">Method not found.</p>'}</section>
   ${W.photos.length||W.text?`<section>${fold('What you added',`${W.photos.length?`<div class="thumbs">${W.photos.map(p=>`<div><img src="${p}" alt=""></div>`).join('')}</div>`:''}${W.text?`<p class="pre" style="margin-top:12px">${esc(W.text)}</p>`:''}`)}</section>`:''}
   <section class="card" style="text-align:center"><h2>Did I read this correctly?</h2>
     <div class="row-btns" style="margin-top:14px"><button class="btn btn-ghost" data-act="wiz-edit">${I.pen} Edit something</button><button class="btn btn-ghost" data-act="wiz-reset">Start over</button></div></section>
@@ -3622,13 +3896,22 @@ function wizFoundEdit(){
   </div>
   <div class="grid2"><label class="field"><span>Makes (number)</span><input class="inp" data-wf="yieldQuantity" inputmode="numeric" value="${esc(F.yieldQuantity??'')}" placeholder="e.g. 3"></label><label class="field"><span>Makes (what)</span><input class="inp" data-wf="yieldType" value="${esc(F.yieldType||'')}" placeholder="e.g. cake layers, loaves"></label></div>
   <div class="grid2"><label class="field"><span>Oven</span><input class="inp" data-wf="tempText" value="${esc(F.tempText)}" placeholder="—"></label><label class="field"><span>Cook time</span><input class="inp" data-wf="cookTime" value="${esc(F.cookTime)}" placeholder="—"></label></div>
+  <div class="grid2"><label class="field"><span>Prep time</span><input class="inp" data-wf="prepTime" value="${esc(F.prepTime||'')}" placeholder="—"></label><label class="field"><span>Resting time</span><input class="inp" data-wf="restTime" value="${esc(F.restTime||'')}" placeholder="—"></label></div>
   <label class="field"><span>Category</span><select class="inp" data-wf="category">${allCats().map(c=>`<option ${c===(W.category||guessCat(F.name))?'selected':''}>${esc(c)}</option>`).join('')}</select></label>
+  ${F.categoryText?`<label class="field"><span>Category as written in the recipe</span><input class="inp" data-wf="categoryText" value="${esc(F.categoryText)}"></label>`:''}
   <section><h2>Ingredients <span class="muted" style="font-size:16px">(${F.ingredients.length})</span></h2>
   <div class="stack" style="margin-top:12px">${F.ingredients.map(wIngRow).join('')}</div>
   <button class="btn btn-ghost" style="margin-top:12px" data-act="wing-add">${I.plus} Add ingredient</button></section>
   <section><h2>Method</h2>
   <div class="stack" style="margin-top:12px">${F.instructions.map((x,i)=>`<div class="steprow"><span class="n">${i+1}</span><div><textarea class="inp" data-wstep="${i}" data-clean="recipe" rows="2">${esc(x)}</textarea><div class="tools"><button data-act="wstep-del" data-i="${i}" aria-label="Remove step">${I.trash}</button></div></div></div>`).join('')}</div>
   <button class="btn btn-ghost" style="margin-top:12px" data-act="wstep-add">${I.plus} Add step</button></section>
+  <section><h2>Nutrition from the recipe</h2><p class="sub">Only what the recipe states — leave blank if it doesn't say. Smart Treats calculates its own nutrition separately.</p>
+    <div class="grid2" style="margin-top:10px"><label class="field"><span>Values are</span><select class="inp" data-wnb="1">${[['serving','Per serving'],['recipe','Whole recipe'],['per100g','Per 100 g'],['unknown','Not stated']].map(([v,l])=>`<option value="${v}" ${((F.nutrition||{}).basis||'unknown')===v?'selected':''}>${l}</option>`).join('')}</select></label><label class="field"><span>1 serving is…</span><input class="inp" data-wnu="1" value="${esc((F.nutrition||{}).unitLabel||F.servingUnit||'')}" placeholder="bun, slice…"></label></div>
+    <div class="ngrid">${['kcal','protein','carbs','fat','satFat','fibre','sugar','sodium','salt'].map(k=>{const v=((F.nutrition||{}).values||{})[k];return `<label class="field"><span>${NUTR_LABEL[k]} <small>(${k==='kcal'?'kcal':k==='sodium'?'mg':'g'})</small></span><input class="inp" data-wn="${k}" inputmode="decimal" value="${esc(v?String(v.value):'')}" placeholder="—"></label>`}).join('')}</div></section>
+  <section><h2>Dietary</h2><label class="field"><span>One per line, as written</span><textarea class="inp" data-wf="dietaryTags" rows="3">${esc((F.dietaryTags||[]).join('\n'))}</textarea></label></section>
+  <section><h2>Baking tips</h2><label class="field"><span>One tip per line</span><textarea class="inp" data-wf="tips" rows="3">${esc((F.tips||[]).join('\n'))}</textarea></label></section>
+  <section><h2>Storage</h2><textarea class="inp" data-wf="storage" rows="2" placeholder="How to keep it">${esc(F.storage||'')}</textarea></section>
+  <section><h2>Notes</h2><textarea class="inp" data-wf="notes" rows="4" placeholder="Recipe notes">${esc(F.notes||'')}</textarea></section>
   <div class="footbar"><div class="footbar-in"><button class="btn btn-primary" data-act="wiz-edit-done">${I.check} Done</button></div></div>`;
 }
 function rebuildPriorities(){
@@ -4420,11 +4703,12 @@ const WIZ_KEY='smartTreats.wizard';
 let W=null, wizCtl=null, wTimer=null;
 function freshW(){return {stage:'import',mode:'',text:'',rawText:'',url:'',photos:[],found:null,foundEdit:false,sourceType:'',category:'',needs:{reqs:[],goals:[],keepClose:false,priorities:[],set:false},result:null,targetId:null,baseIsOriginal:true}}
 function resetWizard(){W=freshW();saveW()}
-function loadW(){try{const w=JSON.parse(store.get(WIZ_KEY)||'null');if(w&&w.stage){if(w.stage==='reading')w.stage='import';if(w.stage==='working')w.stage='needs';if(w.stage==='error')w.stage=w.errBack||'import';if(w.text&&looksPercentEncoded(w.text))w.text=normalizeRecipeInput(w.text);return Object.assign(freshW(),w)}}catch(e){}return freshW()}
+function loadW(){try{const w=JSON.parse(store.get(WIZ_KEY)||'null');if(w&&w.stage){if(w.stage==='reading')w.stage='import';if(w.stage==='working')w.stage='needs';if(w.stage==='error')w.stage=w.errBack||'import';if(w.text&&looksPercentEncoded(w.text))w.text=normalizeRecipeInput(w.text);w.busy=false;return Object.assign(freshW(),w)}}catch(e){}return freshW()}
 function saveW(){if(!W)return;if(!store.set(WIZ_KEY,JSON.stringify(W))){const p=W.photos;W.photos=[];store.set(WIZ_KEY,JSON.stringify(W));W.photos=p}}
 let wTimer2=null;function saveWSoon(){clearTimeout(wTimer2);wTimer2=setTimeout(saveW,300)}
 function openWizard(){if(!W)resetWizard();ui.from='add';nav('add',{reset:true,id:null})}
-function wizCanRead(){const m=W.mode;return !!((m==='photos'&&(ui.aiImages?W.photos.length:W.text.trim()))||(m&&m!=='photos'&&W.text.trim()))}
+function wizCanRead(){const m=W.mode;return !!((m==='photos'&&W.photos.length)||(m&&m!=='photos'&&W.text.trim()))}
+function catFromText(t){if(!t)return '';const parts=String(t).toLowerCase().split(/[\/,|•&]+|\band\b/).map(x=>x.trim()).filter(Boolean);const cats=allCats();for(const p of parts){const c=cats.find(c=>c.toLowerCase()===p||c.toLowerCase()===p+'s'||c.toLowerCase().replace(/s$/,'')===p);if(c&&c!=='Other')return c}const g=guessCat(t);return g!=='Other'?g:''}
 function guessCat(name){const n=String(name||'').toLowerCase();for(const [re,c] of [[/cheesecake/,'Cheesecakes'],[/muffin|cupcake/,'Muffins'],[/brownie/,'Brownies'],[/cookie dough/,'Cookie Dough'],[/cookie|biscuit/,'Cookies'],[/pancake|waffle/,'Pancakes'],[/truffle|\bballs?\b|bites/,'Truffles & Balls'],[/pudding|mousse|chia/,'Puddings'],[/ice cream|frozen|popsicle|nice cream/,'Frozen Treats'],[/apple/,'Apple Desserts'],[/coffee|mocha|espresso|tiramisu/,'Coffee'],[/rice/,'Rice Treats'],[/cake|loaf/,'Cakes'],[/chocolate|cocoa/,'Chocolate'],[/berr|fruit|lemon|peach|banana/,'Fruit']])if(re.test(n))return c;return 'Other'}
 function profileForAI(){const by=s=>DB.ingredients.filter(t=>t.status===s).map(t=>t.name), pf=p=>DB.ingredients.filter(t=>t.pref===p).map(t=>t.name);return {avoid:by('avoid'),caution:by('caution'),love:pf('love'),dislike:pf('dislike')}}
 function errMsg(e){
@@ -4433,37 +4717,59 @@ function errMsg(e){
   return ({rate_limited:'Claude is busy or your usage limit was reached. Try again in a little while.',session_expired:'Please sign in to Claude again, then try again.',image_rejected:"One of the photos couldn't be read. Try a clearer photo or a screenshot.",images_unavailable:"Photos can't be read here. Paste the recipe text instead.",refused:"Claude couldn't help with this recipe.",vision_unavailable:"Reading screenshots needs Claude, which isn't available here. Copy the text from your screenshots and paste it instead.",invalid_json:"The answer came back in a shape Smart Treats couldn't read. Try again.",empty_recipe:"I couldn't find any ingredients. Check the text and try again.",prompt_too_large:'That recipe is too long. Try pasting just the ingredients and method.',unavailable:"Claude isn't available here."})[c]||'Something went wrong. Try again.';
 }
 function streamTo(prefix){return ({text})=>{const s=$('#w-stream');if(s){s.hidden=false;s.textContent=`${prefix} — ${text.length.toLocaleString()} characters so far`}}}
+function prepScreenshot(file){return new Promise((res,rej)=>{const url=URL.createObjectURL(file),img=new Image();
+  img.onload=()=>{const w=img.naturalWidth,h=img.naturalHeight,s=Math.min(1,1290/w,2800/h),c=document.createElement('canvas');c.width=Math.round(w*s);c.height=Math.round(h*s);const x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,c.width,c.height);x.drawImage(img,0,0,c.width,c.height);URL.revokeObjectURL(url);res(c.toDataURL('image/jpeg',0.86))};
+  img.onerror=()=>{URL.revokeObjectURL(url);rej(new Error('decode'))};img.src=url})}
 async function addWizPhotos(files){
-  const max=ui.maxImages||6;
-  for(const f of [...(files||[])]){if(W.photos.length>=max){toast(`Up to ${max} photos at a time.`);break}try{W.photos.push(await compress(f,1500,.82))}catch(e){toast("That image couldn't be opened.")}}
+  const max=12;
+  for(const f of [...(files||[])]){if(W.photos.length>=max){toast(`Up to ${max} screenshots per recipe.`);break}
+    try{W.photos.push(await prepScreenshot(f))}catch(e){toast(/heic|heif/i.test(f.type+f.name)?"This HEIC photo couldn't be opened here — save it as a screenshot or JPEG and try again.":"That image couldn't be opened. Try a PNG or JPEG.")}}
   saveW();render();
+}
+/** fields the parser keeps OUT of the method — saved with the recipe exactly as found */
+function importedExtras(O){
+  const n=O.nutrition&&O.nutrition.values&&Object.keys(O.nutrition.values).length?clone(O.nutrition):null;
+  return {recipeNutrition:n,recipeNutritionText:n?[nutritionBasisText(n)+':',...nutritionLines(n)].join('\n'):(O.nutritionText||''),
+    bakingTips:[...(O.tips||[])],restTime:O.restTime||'',totalTime:O.totalTime||'',recipeCategoryText:O.categoryText||''};
 }
 function wizOriginal(){const F=W.found;return {...F,servings:num(F.servings)||null,ingredients:F.ingredients.filter(i=>(i.name||'').trim()),instructions:F.instructions.filter(s=>(s||'').trim())}}
 async function wizRead(useRules){
-  if(W.text)W.text=normalizeRecipeInput(W.text); // readable text only — never encoded
-  const usePhotos=W.mode==='photos'&&W.photos.length>0&&ui.aiImages&&!useRules;
-  if(!W.text.trim()&&!usePhotos){toast(W.mode==='photos'?'Paste the text from your screenshots first.':'Add the recipe first.');return}
-  const eng=usePhotos?ClaudeEngine:useRules?RulesEngine:await SmartService.engine();
-  W.stage='reading';W.readingEngine=eng.id;render();
+  if(W.busy)return;
+  if(W.text)W.text=normalizeRecipeInput(W.text);
+  const shots=W.mode==='photos'&&W.photos.length>0&&!useRules;
+  if(!W.text.trim()&&!shots){toast(W.mode==='photos'?'Add your screenshots first.':'Add the recipe first.');return}
+  const mode=shots?screenshotReaderMode():null;
+  let eng=shots?null:useRules?RulesEngine:await SmartService.engine();
+  // deterministic parsing first — AI only when the text is genuinely ambiguous
+  const local=shots?null:analyzeRecipeLocal(W.text);
+  if(local&&eng.id!=='rules'&&parseIsConfident(local))eng=RulesEngine;
+  W.busy=true;W.stage='reading';W.readStep=0;W.readingEngine=shots?mode:eng.id;render();
+  const msgs=['Reading your screenshots…','Finding the ingredients…','Putting the recipe together…','Checking for missing information…'];
+  const tick=setInterval(()=>{if(!shots)return;W.readStep=Math.min(3,(W.readStep||0)+1);const h=$('#r-prog');if(h){h.textContent=msgs[W.readStep];$$('.wsteps div').forEach((d,i)=>{const on=i<W.readStep;d.classList.toggle('on',on);$('i',d).innerHTML=on?I.check:''})}},mode==='mock'?350:5000);
   wizCtl=new AbortController();
   try{
     let r;
-    if(usePhotos){
-      const shape=await SmartService.extractRecipeFromImages(W.photos,{signal:wizCtl.signal,onText:streamTo('Reading your screenshots'),text:W.text,url:W.url});
-      r=fromImportShape(shape);W.sourceType=shape.sourceType;
-      if(!r.servings)r.servingsNote="Servings weren't included in the recipe.";
+    if(shots){
+      r=await readRecipeFromScreenshots(W.photos,{signal:wizCtl.signal});
+      {const keep=r.instructions.map(x=>!headInfo(x)&&!isNutritionLine(x));if(keep.includes(false)){r.instructions=r.instructions.filter((x,i)=>keep[i]);if(r.instructionReview)r.instructionReview=r.instructionReview.filter((x,i)=>keep[i])}}
+      W.sourceType=r.sourcePlatform&&/insta|tiktok|pinterest/i.test(r.sourcePlatform)?'instagram_screenshot':'photo';
+      if(r.sourceCreator||r.sourcePlatform)W.source={provider:'screenshot',name:[r.sourceCreator,r.sourcePlatform].filter(Boolean).join(' · '),url:null,attribution:`From screenshots${r.sourceCreator?' by '+r.sourceCreator:''}${r.sourcePlatform?' on '+r.sourcePlatform:''}`};
+      if(mode==='mock')await new Promise(x=>setTimeout(x,1400));
     }else{
-      r=await eng.analyzeRecipe({text:W.text,url:W.url},{signal:wizCtl.signal,onText:streamTo('Reading')});
+      if(eng.id==='rules')r=local;
+      else{try{r=mergeAIParse(local,await eng.analyzeRecipe({text:W.text,url:W.url},{signal:wizCtl.signal,onText:streamTo('Reading')}),W.text)}
+        catch(e){if(e&&(e.code==='cancelled'||e.name==='AbortError'))throw e;if(!local.ingredients.length&&!local.instructions.length)throw e;r=local;eng=RulesEngine}}
       W.sourceType=W.mode==='url'?'url':W.mode==='photos'?(hasSocialNoise(W.text)?'instagram_screenshot':'photo'):'pasted_text';
+      r.engine=eng.id;
     }
-    r.engine=eng.id;
     if(!r.ingredients.length&&!r.instructions.length)throw {code:'empty_recipe'};
     if(!r.name)r.name='My new treat';
-    W.found=r;W.foundEdit=false;W.category=guessCat(r.name);W.needs.set=false;W.result=null;W.stage='found';saveW();render();window.scrollTo(0,0);
+    W.found=r;W.foundEdit=false;W.category=catFromText(r.categoryText)||guessCat(r.name);W.needs.set=false;W.result=null;W.stage='found';
   }catch(e){
-    if(e&&e.code==='cancelled'){W.stage='import';render();return}
-    Object.assign(W,{stage:'error',err:errMsg(e),errRetry:'wiz-read',errRules:eng.id==='claude'&&!!W.text.trim(),errBack:'import'});render();
-  }
+    if(e&&(e.code==='cancelled'||e.name==='AbortError')){W.stage='import'}
+    else if(shots)Object.assign(W,{stage:'error',err:`We couldn't read this recipe yet. Your screenshots are still here.${e&&e.code==='no_reader'?' Connect your AI server in Profile → Smart Recipe AI (or turn on demo mode).':e&&e.code?' ('+({missing_api_key:'the AI server has no OpenAI key',rate_limited:'the AI is busy — try again in a minute',timeout:'it took too long',network:"couldn't reach your AI server",invalid_json:'the answer came back in the wrong shape',empty_recipe:'no recipe text was found in the images',unavailable:'the AI is unavailable'})[e.code]+')':''}`,errRetry:'wiz-read',errRules:false,errBack:'import'});
+    else Object.assign(W,{stage:'error',err:errMsg(e),errRetry:'wiz-read',errRules:eng&&eng.id==='claude'&&!!W.text.trim(),errBack:'import'});
+  }finally{clearInterval(tick);W.busy=false;saveW();render();window.scrollTo(0,0)}
 }
 function shrinkDataURL(d,max=1000,q=.72){return new Promise(res=>{const img=new Image();img.onload=()=>{const s=Math.min(1,max/Math.max(img.naturalWidth,img.naturalHeight));const c=document.createElement('canvas');c.width=Math.round(img.naturalWidth*s);c.height=Math.round(img.naturalHeight*s);c.getContext('2d').drawImage(img,0,0,c.width,c.height);res(c.toDataURL('image/jpeg',q))};img.onerror=()=>res(d);img.src=d})}
 function wizToNeeds(){
@@ -4501,11 +4807,11 @@ async function wizMake(useRules){
 async function wizSave(kind){
   const A=W.result,O=wizOriginal(),status=kind==='ready'?'ready':'adapted';
   const ings=clone(A.ingredients).map(i=>({id:uid(),group:i.group||'',amount:i.amount||'',unit:i.unit||'',name:i.name,optional:!!i.optional,n:{},...(i.pantryId?{pantryId:i.pantryId}:{})}));
-  const fields={pan:O.pan||'',dietaryTags:[...(O.dietaryTags||[])],importNotes:O.notes||'',recipeNutritionText:O.nutritionText||'',recipeStatusText:O.statusText||'',name:A.name,description:A.description||O.description||'',yieldType:O.yieldType||'',yieldQuantity:num(O.yieldQuantity)||null,servingUnit:O.servingUnit||'',servingsStatus:num(O.servings)?'confirmed':null,servings:A.servings||O.servings||null,prepTime:A.prepTime||'',cookTime:A.cookTime||'',tempText:A.tempText||'',
+  const fields={pan:O.pan||'',dietaryTags:[...(O.dietaryTags||[])],importNotes:O.notes||'',recipeNutritionText:O.nutritionText||'',recipeStatusText:O.statusText||'',name:A.name,description:A.description||O.description||'',yieldType:O.yieldType||'',yieldQuantity:num(O.yieldQuantity)||null,servingUnit:O.servingUnit||'',servingsStatus:num(O.servings)?'confirmed':null,servings:A.servings||O.servings||null,prepTime:A.prepTime||'',cookTime:A.cookTime||'',tempText:A.tempText||'',...importedExtras(O),
     adaptedIngredients:ings,adaptedInstructions:[...A.instructions],requirements:A.tags.slice(),userRequirements:[...W.needs.reqs],nutritionGoals:[...W.needs.goals],priorities:clone(W.needs.priorities),keepClose:W.needs.strength==='keep_close',textureGoal:[...(W.needs.texture||[])],adaptationStrength:W.needs.strength||'balanced',portionStrategy:W.needs.portion||'keep',priorityRequirements:[...W.needs.reqs],
     ingredientSubstitutions:clone(A.changes),smartSwaps:A.changes.map(c=>({id:uid(),original:c.original,swap:c.replacement,why:c.why})),requirementChecks:clone(A.requirementChecks),goalFeedback:clone(A.goalFeedback),
     collagenRecommendation:clone(A.collagen),collagen:{status:A.collagen.verdict||'unknown',amount:A.collagen.amount||'',texture:A.collagen.texture||'',how:[A.collagen.where,A.collagen.liquid,A.collagen.reduce].filter(Boolean).join('. ')},
-    adaptationEngine:A.engine,storage:A.storage||'',freezer:A.freezer,versionNotes:A.notes||'',originalNutrition:{kcal:'',protein:'',carbs:'',fat:'',fiber:'',sugar:''}};
+    adaptationEngine:A.engine,storage:A.storage||O.storage||'',freezer:A.freezer??O.freezer??null,versionNotes:A.notes||'',originalNutrition:{kcal:'',protein:'',carbs:'',fat:'',fiber:'',sugar:''}};
   let r=W.targetId&&getR(W.targetId);
   if(r){
     const keepOrig=r.original,{adaptedIngredients,adaptedInstructions,...rest}=fields;
@@ -4513,7 +4819,7 @@ async function wizSave(kind){
     createRecipeVersion(r,{ingredients:ings,instructions:A.instructions,servings:fields.servings,source:A.engine,engine:A.engine,changes:A.changes});
     r.status=status;r.updatedAt=Date.now();
   }else{
-    const sourceImages=await Promise.all(W.photos.map(p=>shrinkDataURL(p)));
+    const sourceImages=await Promise.all(W.photos.map(p=>shrinkDataURL(p,1290,.8)));
     r=newRecipe({...fields,externalSource:W.source||null,sourceType:W.sourceType||(W.mode==='url'?'url':W.text?'pasted_text':'manual'),rawImportedText:W.rawText||W.text||'',sourceImages,category:W.category||guessCat(O.name),referencePhoto:sourceImages[0]||null,originalSource:W.url||'',originalRecipe:W.text||'',originalIngredients:O.ingredients.map(lineOf).join('\n'),originalInstructions:O.instructions.join('\n'),original:clone(O),status});
     r.versions=[{id:uid(),n:1,createdAt:Date.now(),label:'Version 1',source:A.engine,ingredients:clone(ings),instructions:[...A.instructions],servings:r.servings,changes:clone(A.changes)}];r.currentVersion=1;
     DB.recipes.unshift(r);
@@ -4532,11 +4838,11 @@ async function wizSaveAsIs(){
   const O=wizOriginal(), reqs=DB.preferences.bodyReqs||[];
   const ings=clone(O.ingredients).map(i=>({id:uid(),group:i.group||'',amount:i.amount||'',unit:i.unit||'',name:i.name,optional:!!i.optional,n:{}}));
   const checks=reqs.length?checkRequirements(ings,reqs,[]):[];
-  const sourceImages=await Promise.all(W.photos.map(p=>shrinkDataURL(p)));
+  const sourceImages=await Promise.all(W.photos.map(p=>shrinkDataURL(p,1290,.8)));
   const r=newRecipe({name:O.name.trim(),description:O.description||'',category:W.category||guessCat(O.name),
     servings:num(O.servings)||null,servingUnit:O.servingUnit||'',yieldType:O.yieldType||'',yieldQuantity:num(O.yieldQuantity)||null,servingsStatus:num(O.servings)?'confirmed':null,servingsAudit:1,
     prepTime:O.prepTime||'',cookTime:O.cookTime||'',tempText:O.tempText||'',storage:O.storage||'',freezer:O.freezer??null,
-    pan:O.pan||'',dietaryTags:[...(O.dietaryTags||[])],importNotes:O.notes||'',recipeNutritionText:O.nutritionText||'',recipeStatusText:O.statusText||'',
+    pan:O.pan||'',dietaryTags:[...(O.dietaryTags||[])],importNotes:O.notes||'',recipeNutritionText:O.nutritionText||'',recipeStatusText:O.statusText||'',...importedExtras(O),
     original:clone(O),adaptedIngredients:ings,adaptedInstructions:[...O.instructions],requirementChecks:checks,requirements:checks.filter(c=>c.status==='met').map(c=>c.requirement),
     originalRecipe:W.text||'',originalIngredients:O.ingredients.map(lineOf).join('\n'),originalInstructions:O.instructions.join('\n'),originalSource:W.url||'',
     sourceType:W.sourceType||(W.mode==='url'?'url':W.text?'pasted_text':'manual'),rawImportedText:W.rawText||W.text||'',sourceImages,referencePhoto:sourceImages[0]||null,externalSource:W.source||null,
@@ -4604,6 +4910,9 @@ Object.assign(ACT,{
   'wstep-del':el=>{W.found.instructions.splice(+el.dataset.i,1);saveW();const y=window.scrollY;render();window.scrollTo(0,y)},
   'wiz-to-needs':()=>wizToNeeds(),
   'wiz-save-asis':()=>wizSaveAsIs(),
+  'wiz-rev':(el)=>{const F=W.found,i=+el.dataset.i,to=el.dataset.to,x=(F.needsReview||[])[i];if(x==null)return;F.needsReview.splice(i,1);
+    if(to==='method')F.instructions.push(x);else if(to==='ingredient')F.ingredients.push(parseIngredientLine(x,''));else if(to==='notes')F.notes=(F.notes?F.notes+'\n\n':'')+x;else if(to==='description')F.description=(F.description?F.description+' ':'')+x;
+    saveW();keepScroll(()=>{});toast(to==='remove'?'Removed':`Moved to ${to==='ingredient'?'ingredients':to}`)},
   'wiz-req':el=>{const a=W.needs.reqs,v=el.dataset.v,i=a.indexOf(v);i>=0?a.splice(i,1):a.push(v);rebuildPriorities();saveW();const y=window.scrollY;render();window.scrollTo(0,y)},
   'wiz-goal':el=>{const a=W.needs.goals,v=el.dataset.v,i=a.indexOf(v);i>=0?a.splice(i,1):a.push(v);rebuildPriorities();saveW();const y=window.scrollY;render();window.scrollTo(0,y)},
   'wiz-texture':el=>{const N=W.needs,v=el.dataset.v;N.texture=N.texture||[];
@@ -4939,7 +5248,12 @@ document.addEventListener('input',e=>{
   if(ui.screen==='add'&&W){
     if(d.w==='text'&&looksPercentEncoded(t.value)){W.rawText=(W.rawText?W.rawText+'\n':'')+t.value;t.value=normalizeRecipeInput(t.value)}
     if(d.w){W[d.w]=t.value;saveWSoon();const b=$('#w-read');if(b)b.disabled=!wizCanRead();return}
-    if(d.wf&&d.wf!=='category'){W.found[d.wf]=t.value;if(d.wf==='servings'){W.found.servingsNote='';t.classList.remove('warn')}saveWSoon();return}
+    if(d.wf==='dietaryTags'||d.wf==='tips'){W.found[d.wf]=t.value.split('\n').map(x=>x.trim()).filter(Boolean);saveWSoon();return}
+    if(d.wn||d.wnb||d.wnu){const F=W.found;F.nutrition=F.nutrition||{basis:'unknown',unitLabel:'',values:{},note:'',source:'recipe',text:''};
+      if(d.wnb)F.nutrition.basis=t.value;else if(d.wnu)F.nutrition.unitLabel=t.value.trim();
+      else{const v=t.value.trim().replace(',','.');if(!v)delete F.nutrition.values[d.wn];else F.nutrition.values[d.wn]={value:isNaN(+v)?v:+v,unit:(F.nutrition.values[d.wn]||{}).unit||(d.wn==='kcal'?'kcal':d.wn==='sodium'?'mg':'g')}}
+      F.nutrition.edited=true;if(!Object.keys(F.nutrition.values).length&&!F.nutritionText)F.nutrition=null;saveWSoon();return}
+    if(d.wf&&d.wf!=='category'){W.found[d.wf]=t.value;if(d.wf==='servings'){W.found.servingsNote='';W.found.servingsConflict='';W.found.needsReview=(W.found.needsReview||[]).filter(x=>!/^Servings: “/.test(x));t.classList.remove('warn')}saveWSoon();return}
     if(d.wing){const i=W.found.ingredients.find(x=>x.id===d.wing);if(i){i[d.f]=t.type==='checkbox'?t.checked:t.value;saveWSoon()}return}
     if(d.wstep!=null){W.found.instructions[+d.wstep]=t.value;saveWSoon();return}
   }
@@ -4993,9 +5307,9 @@ render();
   const a=document.activeElement;if(!(a&&/INPUT|TEXTAREA|SELECT/.test(a.tagName))&&['home','add','profile'].includes(ui.screen)&&!['reading','working'].includes(W&&W.stage)){const y=window.scrollY;render();window.scrollTo(0,y)}
 })();
 
+
 /* offline support */
 if('serviceWorker' in navigator&&location.protocol.startsWith('http')){window.addEventListener('load',()=>{navigator.serviceWorker.register('sw.js').catch(()=>{})})}
-
 </script>
 </body>
 </html>
